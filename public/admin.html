@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Mail Links</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f4f0e8;--surface:#fffef9;--border:#d8d0bc;--text:#1c1a14;--muted:#7a7060;--accent:#d04a00;--green:#1a6b3a;--danger:#c0392b;--mono:'IBM Plex Mono',monospace;--sans:'Bricolage Grotesque',sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+  #loginOverlay{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center}
+  .login-box{background:var(--surface);border:2px solid var(--text);box-shadow:5px 5px 0 #c4b99a;border-radius:6px;padding:40px;width:360px;text-align:center}
+  .login-box h2{font-size:24px;font-weight:800;margin-bottom:6px}
+  .login-box p{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:28px}
+  .login-box input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:4px;background:var(--bg);font-family:var(--mono);font-size:15px;color:var(--text);outline:none;margin-bottom:12px;transition:border-color .15s}
+  .login-box input:focus{border-color:var(--accent)}
+  .btn-main{width:100%;padding:12px;background:var(--text);color:var(--bg);border:none;border-radius:4px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px}
+  .btn-main:hover{opacity:.85}
+  .login-err{margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--danger);display:none}
+  #mainApp{display:none}
+  .topbar{background:var(--text);color:var(--bg);padding:0 32px;height:54px;display:flex;align-items:center;justify-content:space-between}
+  .topbar h1{font-size:15px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+  .btn-sm{padding:6px 14px;border-radius:3px;font-family:var(--mono);font-size:11px;cursor:pointer;background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7)}
+  .btn-sm:hover{border-color:#fff;color:#fff}
+  .content{max-width:1050px;margin:0 auto;padding:36px 24px}
+  .card{background:var(--surface);border:2px solid var(--text);box-shadow:4px 4px 0 #c4b99a;border-radius:5px;padding:26px 28px;margin-bottom:28px}
+  .card-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:18px}
+  .tabs{display:flex;margin-bottom:18px;border:1.5px solid var(--border);border-radius:4px;overflow:hidden;width:fit-content}
+  .tab{padding:8px 20px;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;cursor:pointer;background:transparent;border:none;color:var(--muted)}
+  .tab.active{background:var(--text);color:var(--bg)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end}
+  @media(max-width:700px){.form-grid{grid-template-columns:1fr}}
+  .fg label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+  .fg input{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:3px;background:var(--bg);font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color .15s}
+  .fg input:focus{border-color:var(--accent)}
+  .btn-add{padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:3px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;height:38px}
+  .btn-add:hover{opacity:.85}
+  #bulkPanel{display:none}
+  .bulk-ta{width:100%;height:130px;padding:12px;border:1.5px solid var(--border);border-radius:3px;background:var(--bg);font-family:var(--mono);font-size:12px;color:var(--text);outline:none;resize:vertical;line-height:1.8}
+  .bulk-ta:focus{border-color:var(--accent)}
+  .bulk-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px}
+  .hint{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .btn-bulk{padding:9px 22px;background:var(--text);color:var(--bg);border:none;border-radius:3px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer}
+  .btn-bulk:hover{opacity:.8}
+  .table-wrap{background:var(--surface);border:2px solid var(--text);box-shadow:4px 4px 0 #c4b99a;border-radius:5px;overflow:hidden}
+  .table-top{padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--text);background:var(--bg)}
+  .table-top h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px}
+  .badge{background:var(--text);color:var(--bg);font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:20px}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:#ede9de;padding:10px 16px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)}
+  tbody tr{border-bottom:1px solid var(--border)}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:#f6f2e8}
+  tbody td{padding:11px 16px;font-family:var(--mono);font-size:12px;vertical-align:middle}
+  .link-box{display:flex;align-items:center;gap:6px}
+  .link-text{font-size:11px;color:var(--green);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none}
+  .link-text:hover{text-decoration:underline}
+  .btn-copy{background:none;border:1px solid var(--border);border-radius:3px;padding:3px 8px;font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--muted);white-space:nowrap}
+  .btn-copy:hover,.btn-copy.copied{border-color:var(--green);color:var(--green)}
+  .btn-del{background:none;border:1px solid transparent;color:var(--muted);font-size:14px;cursor:pointer;padding:4px 8px;border-radius:3px}
+  .btn-del:hover{border-color:var(--danger);color:var(--danger);background:#fff0f0}
+  .empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--bg);padding:11px 20px;border-radius:4px;font-family:var(--mono);font-size:12px;z-index:999;transform:translateY(60px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.ok{background:var(--green)}
+  .toast.err{background:var(--danger)}
+  .filter-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap}
+  .search-wrap{display:flex;align-items:center;flex:1;min-width:180px;background:var(--surface);border:1.5px solid var(--border2);border-radius:4px;padding:0 10px;gap:6px;transition:border-color .15s}
+  .search-wrap:focus-within{border-color:var(--accent)}
+  .search-icon{font-size:12px;flex-shrink:0}
+  .search-wrap input{flex:1;border:none;background:transparent;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;padding:8px 0}
+  .clear-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0;line-height:1}
+  .clear-btn:hover{color:var(--accent)}
+  #sortSelect{padding:8px 10px;border:1.5px solid var(--border2);border-radius:4px;background:var(--surface);font-family:var(--mono);font-size:11px;color:var(--text);outline:none;cursor:pointer}
+  #sortSelect:focus{border-color:var(--accent)}
+  .filter-info{font-family:var(--mono);font-size:11px;color:var(--accent);white-space:nowrap}
+  .highlight{background:#fef3c7;border-radius:2px;padding:0 1px}
+</style>
+</head>
+<body>
+<div id="loginOverlay">
+  <div class="login-box">
+    <h2>⚙ ADMIN</h2>
+    <p>LOCPHAT</p>
+    <input type="password" id="adminPass" placeholder="Mật khẩu admin..." />
+    <button class="btn-main" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-err" id="loginErr">❌ Sai mật khẩu</div>
+  </div>
+</div>
+
+<div id="mainApp">
+  <div class="topbar">
+    <h1>✉ LOCPHAT Mail Link Manager</h1>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="hostLabel" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4)"></span>
+      <button class="btn-sm" onclick="doLogout()">Đăng xuất</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">🔗 Tạo link mới</div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('single')">Nhập 1 acc</button>
+        <button class="tab" onclick="switchTab('bulk')">Bulk import</button>
+      </div>
+      <div id="singlePanel">
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <div class="fg" style="flex:1">
+            <label>Paste chuỗi acc (tự tách)</label>
+            <input id="inRaw" type="text" placeholder="froschth@gmx.de|elli_hofmann6rsk@gmx.de|uUOV2Ts8FV!S5Fm9ad2e" style="font-size:12px" />
+          </div>
+          <button class="btn-add" onclick="createSingle()">Tạo link</button>
+        </div>
+        <div id="previewBox" style="display:none;margin-top:12px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8"></div>
+      </div>
+      <div id="bulkPanel">
+        <textarea class="bulk-ta" id="bulkText" placeholder="maillam|mailchinh|pass&#10;maillam|mailchinh|pass|nhãn&#10;..."></textarea>
+        <div class="bulk-footer">
+          <span class="hint">Cú pháp: maillam|mailchinh|pass hoặc thêm |nhãn ở cuối</span>
+          <button class="btn-bulk" onclick="createBulk()">⚡ Tạo tất cả</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-top">
+        <h2>📦 Danh sách links</h2>
+        <span class="badge" id="totalBadge">0 links</span>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input id="searchInput" type="text" placeholder="Tìm mail, nhãn, slug..." oninput="applyFilter()" />
+          <button class="clear-btn" id="clearSearch" onclick="clearFilter()" style="display:none">✕</button>
+        </div>
+        <select id="sortSelect" onchange="applyFilter()">
+          <option value="newest">Mới nhất</option>
+          <option value="oldest">Cũ nhất</option>
+          <option value="label">Nhãn A→Z</option>
+          <option value="mail">Mail A→Z</option>
+        </select>
+        <span class="filter-info" id="filterInfo" style="display:none"></span>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Nhãn</th><th>Mail làm</th><th>Mail chính</th><th>Link người dùng</th><th>Tạo lúc</th><th></th></tr></thead>
+        <tbody id="linksTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let token=sessionStorage.getItem('admin_token')||'';
+let links=[];
+const BASE=window.location.origin;
+
+async function doLogin(){
+  const pass=document.getElementById('adminPass').value;
+  try{
+    const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})});
+    const d=await r.json();
+    if(d.token){token=d.token;sessionStorage.setItem('admin_token',token);showMain();}
+    else document.getElementById('loginErr').style.display='block';
+  }catch{document.getElementById('loginErr').style.display='block';}
+}
+document.getElementById('adminPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+function doLogout(){sessionStorage.removeItem('admin_token');location.reload();}
+function showMain(){
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('hostLabel').textContent=BASE;
+  loadLinks();
+}
+const H=()=>({'Content-Type':'application/json','x-admin-token':token});
+
+async function loadLinks(){
+  const r=await fetch('/api/admin/links',{headers:H()});
+  if(r.status===401){doLogout();return;}
+  links=await r.json();
+  renderTable();
+}
+
+function highlight(str, q){
+  if(!q) return esc(str);
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return esc(str).replace(re,'<mark class="highlight">$1</mark>');
+}
+
+function applyFilter(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+  const clearBtn = document.getElementById('clearSearch');
+  clearBtn.style.display = q ? 'block' : 'none';
+
+  let filtered = links.filter(l => {
+    if(!q) return true;
+    return (l.from||'').toLowerCase().includes(q)
+        || (l.to||'').toLowerCase().includes(q)
+        || (l.label||'').toLowerCase().includes(q)
+        || (l.slug||'').toLowerCase().includes(q);
+  });
+
+  filtered = [...filtered].sort((a,b) => {
+    if(sort==='oldest') return new Date(a.createdAt||0)-new Date(b.createdAt||0);
+    if(sort==='label')  return (a.label||'').localeCompare(b.label||'');
+    if(sort==='mail')   return (a.to||'').localeCompare(b.to||'');
+    return new Date(b.createdAt||0)-new Date(a.createdAt||0); // newest
+  });
+
+  const info = document.getElementById('filterInfo');
+  if(q){
+    info.style.display='inline';
+    info.textContent = `${filtered.length} / ${links.length} kết quả`;
+  } else {
+    info.style.display='none';
+  }
+
+  renderTable(filtered, q);
+}
+
+function clearFilter(){
+  document.getElementById('searchInput').value='';
+  document.getElementById('clearSearch').style.display='none';
+  document.getElementById('filterInfo').style.display='none';
+  applyFilter();
+}
+
+function renderTable(data, q){
+  if(data===undefined){ data=links; q=''; }
+  const tbody=document.getElementById('linksTable');
+  document.getElementById('totalBadge').textContent=`${links.length} links`;
+  if(!data.length){
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="7">${links.length?'Không tìm thấy kết quả nào':'Chưa có link nào. Tạo ở trên nhé!'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=data.map((l,i)=>{
+    const url=`${BASE}/m/${l.slug}`;
+    const dt=l.createdAt?new Date(l.createdAt).toLocaleString('vi-VN'):'';
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td>${highlight(l.label||'—',q)}</td>
+      <td style="color:var(--muted);font-size:11px">${highlight(l.from,q)}</td>
+      <td style="color:var(--accent);font-weight:600">${highlight(l.to,q)}</td>
+      <td><div class="link-box">
+        <a class="link-text" href="${url}" target="_blank">${url}</a>
+        <button class="btn-copy" onclick="copyLink('${url}',this)">copy</button>
+      </div></td>
+      <td style="color:var(--muted);font-size:11px">${dt}</td>
+      <td><button class="btn-del" onclick="deleteLink('${l.slug}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function copyLink(url,btn){
+  navigator.clipboard.writeText(url).then(()=>{
+    btn.textContent='✓';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='copy';btn.classList.remove('copied');},2000);
+  });
+}
+
+function switchTab(t){
+  document.getElementById('singlePanel').style.display=t==='single'?'':'none';
+  document.getElementById('bulkPanel').style.display=t==='bulk'?'':'none';
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(t==='single'&&i===0)||(t==='bulk'&&i===1)));
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('inRaw').addEventListener('input',function(){
+    const val=this.value.trim();
+    const box=document.getElementById('previewBox');
+    if(!val){box.style.display='none';return;}
+    const parts=val.split('|');
+    if(parts.length>=3){
+      box.style.display='block';
+      box.innerHTML=`✅ <span style="color:var(--text)">Mail làm:</span> ${esc(parts[0])} &nbsp;|&nbsp; `
+        +`<span style="color:var(--text)">Mail chính:</span> ${esc(parts[1])} &nbsp;|&nbsp; `
+        +`<span style="color:var(--text)">Pass:</span> ${'•'.repeat(parts[2].length)}`;
+    }else{
+      box.style.display='block';
+      box.innerHTML=`⚠️ Cần đủ 3 phần: maillam|mailchinh|pass`;
+    }
+  });
+});
+
+async function createSingle(){
+  const raw=document.getElementById('inRaw').value.trim();
+  if(!raw){toast('Paste chuỗi acc vào!','err');return;}
+  const parts=raw.split('|');
+  if(parts.length<3){toast('Cần đủ: maillam|mailchinh|pass','err');return;}
+  const [from,to,pass,...rest]=parts;
+  const label=rest.join('|').trim();
+  if(!from||!to||!pass){toast('Thiếu dữ liệu!','err');return;}
+  const r=await fetch('/api/admin/links',{method:'POST',headers:H(),body:JSON.stringify({entries:[{from,to,pass,label}]})});
+  const d=await r.json();
+  if(d.ok){
+    document.getElementById('inRaw').value='';
+    document.getElementById('previewBox').style.display='none';
+    const url=`${BASE}/m/${d.created[0].slug}`;
+    navigator.clipboard.writeText(url).catch(()=>{});
+    toast('✅ Đã tạo & copy link!','ok');
+    loadLinks();
+  }else toast(d.error||'Lỗi','err');
+}
+
+async function createBulk(){
+  const raw=document.getElementById('bulkText').value.trim();
+  if(!raw)return;
+  const lines=raw.split('\n').filter(l=>l.trim()&&!l.startsWith('#'));
+  if(!lines.length){toast('Không có dòng hợp lệ','err');return;}
+  const r=await fetch('/api/admin/links',{method:'POST',headers:H(),body:JSON.stringify({entries:lines})});
+  const d=await r.json();
+  if(d.ok){document.getElementById('bulkText').value='';toast(`✅ Đã tạo ${d.created.length} links`,'ok');loadLinks();}
+  else toast(d.error||'Lỗi','err');
+}
+
+async function deleteLink(slug){
+  if(!confirm('Xóa link này?'))return;
+  const r=await fetch(`/api/admin/links/${slug}`,{method:'DELETE',headers:H()});
+  const d=await r.json();
+  if(d.ok){toast('🗑 Đã xóa','ok');loadLinks();}
+}
+
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className=`toast ${type} show`;
+  setTimeout(()=>{el.className='toast';},2800);
+}
+
+if(token){fetch('/api/admin/links',{headers:H()}).then(r=>{if(r.ok)showMain();else sessionStorage.removeItem('admin_token');});}
+</script>
+</body>
+</html>
