@@ -84,7 +84,7 @@
 <div id="loginOverlay">
   <div class="login-box">
     <h2>⚙ ADMIN</h2>
-    <p>Mail Link Manager</p>
+    <p>LOCPHAT</p>
     <input type="password" id="adminPass" placeholder="Mật khẩu admin..." />
     <button class="btn-main" onclick="doLogin()">Đăng nhập</button>
     <div class="login-err" id="loginErr">❌ Sai mật khẩu</div>
@@ -93,12 +93,12 @@
 
 <div id="mainApp">
   <div class="topbar">
-    <h1>✉ Mail Link Manager</h1>
+    <h1>✉LOCPHAT Mail Link Manager</h1>
     <div style="display:flex;align-items:center;gap:12px">
       <span id="hostLabel" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4)"></span>
-      <button class="btn-backup" onclick="doBackup()" title="Tải file backup">⬇ Backup</button>
+      <button class="btn-backup" onclick="doBackup()" title="Tải file backup">⬇ Tải data về</button>
       <label class="btn-backup" title="Khôi phục từ backup" style="cursor:pointer">
-        ⬆ Restore <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
+        ⬆ Tải data lên <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
       </label>
       <button class="btn-sm" onclick="doLogout()">Đăng xuất</button>
     </div>
@@ -113,8 +113,8 @@
       <div id="singlePanel">
         <div style="display:flex;gap:10px;align-items:flex-end">
           <div class="fg" style="flex:1">
-            <label>Paste chuỗi acc (tự tách)</label>
-            <input id="inRaw" type="text" placeholder="froschth@gmx.de|elli_hofmann6rsk@gmx.de|uUOV2Ts8FV!S5Fm9ad2e" style="font-size:12px" />
+            <label>Nhập acc vào ô bên dưới</label>
+            <input id="inRaw" type="text" placeholder="mail làm | mail chính | pass mail chính" style="font-size:12px" />
           </div>
           <button class="btn-add" onclick="createSingle()">Tạo link</button>
         </div>
@@ -343,7 +343,6 @@ function toast(msg,type=''){
 function doBackup(){
   const a=document.createElement('a');
   a.href=`/api/admin/backup`;
-  // Gắn token vào URL không được, dùng fetch rồi download
   fetch('/api/admin/backup',{headers:H()})
     .then(r=>r.blob())
     .then(blob=>{
