@@ -49,12 +49,12 @@
   .filter-info{font-family:var(--mono);font-size:11px;color:var(--accent);white-space:nowrap}
   table{table-layout:fixed;width:100%;border-collapse:collapse}
   thead th{background:#ede9de;padding:10px 16px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)}
-  thead th:nth-child(1){width:60px}
+  thead th:nth-child(1){width:40px}
   thead th:nth-child(2){width:170px}
-  thead th:nth-child(3){width:140px}
+  thead th:nth-child(3){width:170px}
   thead th:nth-child(4){width:auto}
-  thead th:nth-child(5){width:100px}
-  thead th:nth-child(6){width:70px}
+  thead th:nth-child(5){width:120px}
+  thead th:nth-child(6){width:36px}
   tbody tr{border-bottom:1px solid var(--border)}
   tbody tr:last-child{border-bottom:none}
   tbody tr:hover{background:#f6f2e8}
@@ -82,6 +82,36 @@
   .toast.ok{background:var(--green)}
   .toast.err{background:var(--danger)}
   .highlight{background:#fef3c7;border-radius:2px;padding:0 1px}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal{background:var(--surface);border:2px solid var(--text);box-shadow:6px 6px 0 #c4b99a;border-radius:6px;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column}
+  .modal-head{padding:18px 24px;border-bottom:2px solid var(--text);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .modal-head h3{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+  .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;padding:0 4px}
+  .modal-close:hover{color:var(--danger)}
+  .modal-body{flex:1;overflow-y:auto;padding:20px 24px}
+  .modal-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;flex-wrap:wrap}
+  .result-list{font-family:var(--mono);font-size:11px;line-height:2;color:var(--text)}
+  .result-item{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)}
+  .result-item:last-child{border-bottom:none}
+  .result-from{color:var(--muted);min-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+  .result-to{color:var(--accent);min-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+  .result-link{color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-decoration:none}
+  .result-link:hover{text-decoration:underline}
+  .btn-dl{padding:9px 20px;background:var(--text);color:var(--bg);border:none;border-radius:3px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .btn-dl:hover{opacity:.85}
+  .result-count{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .history-wrap{margin-top:20px}
+  .history-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+  .history-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:4px;margin-bottom:6px;gap:10px}
+  .history-meta{font-family:var(--mono);font-size:11px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .history-meta b{color:var(--text)}
+  .btn-redl{padding:5px 12px;background:none;border:1.5px solid var(--border);border-radius:3px;font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--muted);white-space:nowrap}
+  .btn-redl:hover{border-color:var(--green);color:var(--green)}
+  .btn-confirm{padding:10px 24px;background:var(--green);color:#fff;border:none;border-radius:3px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer}
+  .btn-confirm:hover{opacity:.85}
+  .btn-cancel-confirm{padding:10px 18px;background:none;border:1.5px solid var(--border);border-radius:3px;font-family:var(--mono);font-size:12px;cursor:pointer;color:var(--muted)}
+  .btn-cancel-confirm:hover{border-color:var(--danger);color:var(--danger)}
+  .confirm-preview{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.9;max-height:200px;overflow-y:auto;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:3px;margin-bottom:16px}
 </style>
 </head>
 <body>
@@ -101,10 +131,11 @@
     <h1>✉ LOCPHAT Mail Manager</h1>
     <div style="display:flex;align-items:center;gap:10px">
       <span id="hostLabel" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4)"></span>
-      <button class="btn-backup" onclick="doBackup()">⬇ Tải data xuống</button>
-      <label class="btn-backup" style="cursor:pointer">⬆ Tải data lên
+      <button class="btn-backup" onclick="doBackup()">⬇ Backup</button>
+      <label class="btn-backup" style="cursor:pointer">⬆ Restore
         <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
       </label>
+      <button class="btn-backup" onclick="openHistory()" id="historyBtn" style="display:none">📁 Lịch sử</button>
       <button class="btn-sm" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
@@ -112,11 +143,12 @@
   <div class="content">
     <div class="card">
       <div class="card-title">🔗 Tạo link mới</div>
-      <textarea class="bulk-ta" id="inRaw" placeholder="maillam|mailchinh|pass&#10;maillam|mailchinh|pass"></textarea>
+      <textarea class="bulk-ta" id="inRaw" placeholder="maillam|mailchinh|pass&#10;maillam|mailchinh|pass&#10;&#10;Paste 1 dòng hoặc nhiều dòng đều được"></textarea>
       <div class="preview-box" id="previewBox"></div>
+
       <div class="bulk-footer">
-        <span class="hint">Cú pháp: maillam|mailchinh|passchinh</span>
-        <button class="btn-add" onclick="createAll()">⚡ Tạo link</button>
+        <span class="hint">Cú pháp: maillam|mailchinh|pass — hỗ trợ nhiều dòng cùng lúc</span>
+        <button class="btn-add" onclick="previewAll()">👁 Xem trước</button>
       </div>
     </div>
 
@@ -158,6 +190,47 @@
     </div>
   </div>
 </div>
+
+<!-- MODAL XÁC NHẬN -->
+<div class="modal-overlay" id="confirmModal" style="display:none" onclick="if(event.target===this)cancelConfirm()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head">
+      <h3>👁 Xem trước</h3>
+      <button class="modal-close" onclick="cancelConfirm()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="confirmText" style="font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:14px;font-weight:600"></div>
+      <div class="confirm-preview" id="confirmPreview"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel-confirm" onclick="cancelConfirm()">Hủy</button>
+      <button class="btn-confirm" onclick="createAll()">⚡ Xác nhận & Tạo link</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KẾT QUẢ -->
+<div class="modal-overlay" id="resultModal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>✅ Links vừa tạo</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="result-list" id="resultList"></div>
+      <div class="history-wrap" id="historyWrap" style="display:none">
+        <div class="history-title">📁 Lịch sử tạo trong phiên này</div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span class="result-count" id="resultCount"></span>
+      <button class="btn-dl" onclick="downloadResult()">⬇ Tải file .txt</button>
+      <button style="padding:8px 14px;background:none;border:1.5px solid var(--danger);border-radius:3px;font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--danger)" onclick="clearHistory()">🗑 Xóa lịch sử</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -166,6 +239,9 @@ let links=[];
 let filteredLinks=[];
 let currentPage=1;
 let pageSize=50;
+let lastCreated=[];
+let pendingLines=[];
+let createHistory=[];
 const BASE=window.location.origin;
 
 async function doLogin(){
@@ -179,11 +255,12 @@ async function doLogin(){
 }
 document.getElementById('adminPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 function doLogout(){sessionStorage.removeItem('admin_token');location.reload();}
-function showMain(){
+async function showMain(){
   document.getElementById('loginOverlay').style.display='none';
   document.getElementById('mainApp').style.display='block';
   document.getElementById('hostLabel').textContent=BASE;
   loadLinks();
+  await loadHistoryFromServer();
 }
 const H=()=>({'Content-Type':'application/json','x-admin-token':token});
 
@@ -306,29 +383,171 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
-async function createAll(){
+function previewAll(){
   const raw=document.getElementById('inRaw').value.trim();
   if(!raw){toast('Nhập acc vào!','err');return;}
   let lines=raw.split(/[\r\n]+/);
   if(lines.filter(l=>l.includes('|')).length<=1){
-    // fallback tách theo space trước email
     lines=raw.split(/\s+(?=[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
   }
   lines=lines.map(l=>l.trim()).filter(l=>l&&!l.startsWith('#')&&l.includes('|'));
-  if(!lines.length){toast('Không có dòng hợp lệ','err');return;}
+  const valid=lines.filter(l=>l.split('|').length>=3);
+  const invalid=lines.length-valid.length;
+  if(!valid.length){toast('Không có dòng hợp lệ','err');return;}
+  pendingLines=valid;
+
+  document.getElementById('confirmText').innerHTML=
+    '<b>'+valid.length+' acc</b> sẵn sàng tạo link'
+    +(invalid?' &nbsp;·&nbsp; ⚠️ '+invalid+' dòng lỗi bị bỏ qua':'');
+
+  const preview=document.getElementById('confirmPreview');
+  const show=valid.slice(0,50);
+  preview.innerHTML=show.map(l=>{
+    const p=l.split('|');
+    return '<div style="padding:3px 0;border-bottom:1px solid var(--border)">'+esc(p[0])
+      +' <span style="color:var(--muted)">→</span> <span style="color:var(--accent)">'+esc(p[1])+'</span></div>';
+  }).join('')+(valid.length>50?'<div style="color:var(--muted);padding-top:6px">... và '+(valid.length-50)+' acc khác</div>':'');
+
+  document.getElementById('confirmModal').style.display='flex';
+}
+
+function cancelConfirm(){
+  pendingLines=[];
+  document.getElementById('confirmModal').style.display='none';
+}
+
+
+async function createAll(){
+  if(!pendingLines.length){toast('Nhập acc vào!','err');return;}
+  const lines=[...pendingLines];
+  pendingLines=[];
+  document.getElementById('confirmModal').style.display='none';
   const r=await fetch('/api/admin/links',{method:'POST',headers:H(),body:JSON.stringify({entries:lines})});
   const d=await r.json();
   if(d.ok){
     document.getElementById('inRaw').value='';
     document.getElementById('previewBox').style.display='none';
-    if(d.created.length===1){
-      navigator.clipboard.writeText(BASE+'/m/'+d.created[0].slug).catch(()=>{});
-      toast('Đã tạo & copy link!','ok');
-    }else{
-      toast('Đã tạo '+d.created.length+' links!','ok');
-    }
+    lastCreated=d.created;
+    await loadHistoryFromServer();
     loadLinks();
+    showResultModal(d.created);
   }else toast(d.error||'Lỗi','err');
+}
+
+
+function showResultModal(created){
+  const list=document.getElementById('resultList');
+  const count=document.getElementById('resultCount');
+  count.textContent=created.length+' links vừa tạo';
+  list.innerHTML=created.map(l=>{
+    const url=BASE+'/m/'+l.slug;
+    return '<div class="result-item">'
+      +'<span class="result-from" title="'+esc(l.from)+'">'+esc(l.from)+'</span>'
+      +'<span style="color:var(--border)">→</span>'
+      +'<span class="result-to" title="'+esc(l.to)+'">'+esc(l.to)+'</span>'
+      +'<a class="result-link" href="'+url+'" target="_blank" title="'+url+'">'+url+'</a>'
+      +'</div>';
+  }).join('');
+  renderHistory();
+  document.getElementById('resultModal').style.display='flex';
+}
+
+function renderHistory(){
+  const wrap=document.getElementById('historyWrap');
+  const list=document.getElementById('historyList');
+  const prev=createHistory.slice(1);
+  if(!prev.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  list.innerHTML=prev.map((h,i)=>`
+    <div class="history-item">
+      <span class="history-meta"><b>${h.count} acc</b> — ${h.ts.replace('_',' ').replace(/-/g,'/').replace(/-/g,':')}</span>
+      <button class="btn-redl" onclick="reDownload(${i+1})">⬇ Tải lại</button>
+    </div>`).join('');
+}
+
+function openHistory(){
+  // Mở modal chỉ với phần lịch sử, không có result list
+  document.getElementById('resultList').innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">— Mở từ lịch sử —</div>';
+  document.getElementById('resultCount').textContent='';
+  renderHistoryFull();
+  document.getElementById('resultModal').style.display='flex';
+}
+
+function renderHistoryFull(){
+  const wrap=document.getElementById('historyWrap');
+  const list=document.getElementById('historyList');
+  if(!createHistory.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  list.innerHTML=createHistory.map((h,i)=>`
+    <div class="history-item">
+      <span class="history-meta"><b>${h.count} acc</b> — ${h.ts.replace('_',' ')}</span>
+      <button class="btn-redl" onclick="reDownload(${i})">⬇ Tải lại</button>
+    </div>`).join('');
+}
+
+async function loadHistoryFromServer(){
+  try{
+    const r=await fetch('/api/admin/history',{headers:H()});
+    if(r.ok) createHistory=await r.json();
+  }catch{}
+  updateHistoryBtn();
+}
+
+function updateHistoryBtn(){
+  const btn=document.getElementById('historyBtn');
+  if(createHistory.length>0){
+    btn.style.display='inline-flex';
+    btn.textContent='📁 Lịch sử ('+createHistory.length+')';
+  }else{
+    btn.style.display='none';
+  }
+}
+
+function reDownload(idx){
+  const h=createHistory[idx];
+  if(!h)return;
+  const lines=h.data.map(l=>l.from+'|'+l.to+'|'+BASE+'/m/'+l.slug);
+  const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='links-'+h.ts+'_'+h.count+'acc.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Đã tải lại '+h.count+' links!','ok');
+}
+
+async function clearHistory(){
+  if(!confirm('Xóa toàn bộ lịch sử?')) return;
+  await fetch('/api/admin/history',{method:'DELETE',headers:H()});
+  createHistory=[];
+  updateHistoryBtn();
+  closeModal();
+  toast('Đã xóa lịch sử','ok');
+}
+
+function closeModal(){
+  document.getElementById('resultModal').style.display='none';
+}
+
+function downloadResult(){
+  // Format: maillam|mailchinh|link
+  const lines=lastCreated.map(l=>l.from+'|'+l.to+'|'+BASE+'/m/'+l.slug);
+  const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const now=new Date();
+  const ts=now.getFullYear()+'-'
+    +String(now.getMonth()+1).padStart(2,'0')+'-'
+    +String(now.getDate()).padStart(2,'0')+'_'
+    +String(now.getHours()).padStart(2,'0')+'-'
+    +String(now.getMinutes()).padStart(2,'0')+'-'
+    +String(now.getSeconds()).padStart(2,'0');
+  a.download='links-'+ts+'_'+lastCreated.length+'acc.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Đã tải '+lastCreated.length+' links!','ok');
 }
 
 async function deleteLink(slug){

@@ -10,6 +10,7 @@
 html,body{height:100%;overflow:hidden}
 body{background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;display:flex;flex-direction:column}
 
+/* TOPBAR */
 .topbar{height:48px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;background:#fff}
 .topbar-logo{font-size:18px}
 .topbar-title{font-size:14px;font-weight:600;color:#111}
@@ -21,25 +22,30 @@ body{background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;display:flex;f
 .status-dot.err{background:#ef4444}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+/* LAYOUT */
 .layout{display:flex;flex:1;overflow:hidden}
 
+/* SIDEBAR */
 .sidebar{width:300px;flex-shrink:0;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;background:#fafafa}
 .sidebar-head{padding:12px 16px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .sidebar-head h2{font-size:13px;font-weight:600;color:#333}
 .mail-count-badge{font-size:11px;color:#888;background:#efefef;padding:2px 8px;border-radius:10px}
 
+/* Mail list scroll area */
 .mail-list-wrap{flex:1;overflow-y:auto;display:flex;flex-direction:column}
 .mail-list{flex:1}
 
-.page-bar{border-top:1px solid #e5e5e5;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;gap:8px}
-.page-info{font-size:11px;color:#999;white-space:nowrap}
-.page-btns{display:flex;gap:4px;align-items:center}
-.page-btn{height:30px;min-width:30px;padding:0 8px;border:1px solid #e0e0e0;background:#fff;border-radius:5px;font-size:12px;cursor:pointer;color:#555;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:3px}
+/* PAGINATION BAR - dưới sidebar */
+.page-bar{border-top:1px solid #e5e5e5;padding:8px 10px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;background:#fff;gap:6px}
+.page-info{font-size:10px;color:#999;white-space:nowrap}
+.page-btns{display:flex;flex-wrap:wrap;gap:3px;align-items:center;justify-content:center;width:100%}
+.page-btn{height:26px;min-width:26px;padding:0 6px;border:1px solid #e0e0e0;background:#fff;border-radius:4px;font-size:11px;cursor:pointer;color:#555;transition:all .12s;display:flex;align-items:center;justify-content:center}
 .page-btn:hover:not(:disabled){background:#f0f4ff;border-color:#3b82f6;color:#3b82f6}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
 .page-btn.active{background:#3b82f6;border-color:#3b82f6;color:#fff;font-weight:600}
-.page-dots{font-size:12px;color:#bbb;padding:0 2px}
+.page-dots{font-size:11px;color:#bbb;padding:0 1px}
 
+/* Mail items */
 .mail-item{padding:12px 16px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .1s;position:relative}
 .mail-item:hover{background:#f5f5f5}
 .mail-item.active{background:#eff6ff;border-right:2px solid #3b82f6}
@@ -48,11 +54,13 @@ body{background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;display:flex;f
 .mail-item-date{font-size:10px;color:#bbb}
 .mail-item-unread::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#3b82f6}
 
+/* Skeleton */
 .skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:3px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel-item{padding:14px 16px;border-bottom:1px solid #f0f0f0}
 .skel-line{height:10px;margin-bottom:6px}
 
+/* MAILBOX */
 .mailbox{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;gap:10px}
 .empty-state .icon{font-size:48px}
@@ -71,10 +79,12 @@ body{background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;display:flex;f
 .mail-body-html img{max-width:100%;height:auto}
 .mail-body-text{font-family:'Courier New',monospace;font-size:13px;line-height:1.7;color:#444;white-space:pre-wrap;word-break:break-word;max-width:680px}
 
+/* scrollbar */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
 
+/* Mobile */
 @media(max-width:600px){
   .sidebar{width:100%;position:absolute;z-index:10;height:100%;transition:transform .25s}
   .sidebar.hidden{transform:translateX(-100%)}
@@ -105,6 +115,7 @@ body{background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;display:flex;f
 </div>
 
 <div class="layout">
+  <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <h2>Hộp thư đến</h2>
@@ -119,12 +130,14 @@ body{background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;display:flex;f
       </div>
     </div>
 
+    <!-- PAGINATION -->
     <div class="page-bar" id="pageBar" style="display:none">
       <span class="page-info" id="pageInfo"></span>
       <div class="page-btns" id="pageBtns"></div>
     </div>
   </div>
 
+  <!-- MAILBOX -->
   <div class="mailbox" id="mailbox">
     <div class="back-btn" id="backBtn" onclick="showSidebar()">← Quay lại</div>
     <div class="empty-state" id="emptyState">
@@ -142,7 +155,7 @@ let activeIdx = -1;
 let currentPage = 1;
 let totalPages = 1;
 let totalMails = 0;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 let currentES = null;
 
 const mailList    = document.getElementById('mailList');
@@ -165,6 +178,7 @@ function shortFrom(from){const m=(from||'').match(/<(.+)>/);const n=(from||'').s
 function fmtShort(iso){if(!iso)return '';const d=new Date(iso);const t=new Date();return d.toDateString()===t.toDateString()?d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});}
 function fmtFull(iso){return iso?new Date(iso).toLocaleString('vi-VN'):'';}
 
+// ── Render sidebar mail items ─────────────────────────────────────────────
 function renderMailList(){
   if(!mails.length){
     mailList.innerHTML=`<div style="padding:30px;text-align:center;font-size:12px;color:#bbb">Trang này không có mail</div>`;
@@ -178,6 +192,7 @@ function renderMailList(){
     </div>`).join('');
 }
 
+// ── Select mail by object reference ──────────────────────────────────────
 function selectMailObj(m, activeEl) {
   document.querySelectorAll('.mail-item').forEach(el => {
     el.classList.remove('active', 'mail-item-unread');
@@ -209,16 +224,19 @@ function selectMailObj(m, activeEl) {
   }
 }
 
+// Keep selectMail for backward compat with renderMailList
 function selectMail(idx){
   const items = document.querySelectorAll('.mail-item');
   selectMailObj(mails[idx], items[idx]);
 }
 
+// ── Render pagination ─────────────────────────────────────────────────────
 function renderPagination(){
   if(totalPages <= 1){ pageBar.style.display='none'; return; }
   pageBar.style.display='flex';
   pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
 
+  // Tạo danh sách số trang hiển thị
   const pages = [];
   if(totalPages <= 7){
     for(let i=1;i<=totalPages;i++) pages.push(i);
@@ -262,13 +280,14 @@ function showSidebar(){
 function reloadMails(){
   const btn  = document.getElementById('reloadBtn');
   const icon = document.getElementById('reloadIcon');
-  if(btn.classList.contains('spinning')) return; 
+  if(btn.classList.contains('spinning')) return; // đang load rồi
 
+  // Reset về trang 1
   currentPage = 1;
   mails = [];
   activeIdx = -1;
 
-
+  // Reset UI
   emptyState.style.display = 'flex';
   mailDetail.style.display = 'none';
   mailList.innerHTML = `
@@ -276,9 +295,11 @@ function reloadMails(){
     <div class="skel-item"><div class="skel-line skeleton" style="width:65%"></div><div class="skel-line skeleton" style="width:70%"></div></div>
     <div class="skel-item"><div class="skel-line skeleton" style="width:45%"></div><div class="skel-line skeleton" style="width:85%"></div></div>`;
 
+  // Spin icon
   btn.classList.add('spinning');
   if(currentES){ currentES.close(); currentES = null; }
 
+  // Khi done, stop spin
   const origOnDone = () => {
     btn.classList.remove('spinning');
   };
@@ -287,6 +308,7 @@ function reloadMails(){
   startSSE();
 }
 
+// ── Load info & start SSE ─────────────────────────────────────────────────
 fetch(`/api/info/${slug}`).then(r=>r.json()).then(d=>{
   if(d.error){setStatus('Link không tồn tại','err');mailList.innerHTML=`<div style="padding:20px;font-size:12px;color:#999;text-align:center">Link không tồn tại</div>`;return;}
   document.getElementById('topMail').textContent = '— ' + d.to;

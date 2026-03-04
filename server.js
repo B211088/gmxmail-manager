@@ -13,6 +13,9 @@ app.use(express.static("public"));
 const DB_FILE = process.env.DATA_PATH
   ? path.join(process.env.DATA_PATH, "links.json")
   : path.join(__dirname, "links.json");
+const HISTORY_FILE = process.env.DATA_PATH
+  ? path.join(process.env.DATA_PATH, "history.json")
+  : path.join(__dirname, "history.json");
 const IMAP_HOST = "imap.gmx.net";
 const IMAP_PORT = 993;
 const PAGE_SIZE = 50;
@@ -21,7 +24,10 @@ const TOKEN_SECRET = process.env.TOKEN_SECRET || "gmx-reader-secret-2024";
 
 function signToken(payload) {
   const data = JSON.stringify(payload);
-  const sig = crypto.createHmac("sha256", TOKEN_SECRET).update(data).digest("hex");
+  const sig = crypto
+    .createHmac("sha256", TOKEN_SECRET)
+    .update(data)
+    .digest("hex");
   return Buffer.from(data).toString("base64") + "." + sig;
 }
 
@@ -30,19 +36,42 @@ function verifyToken(token) {
     const [b64, sig] = (token || "").split(".");
     if (!b64 || !sig) return null;
     const data = Buffer.from(b64, "base64").toString();
-    const expected = crypto.createHmac("sha256", TOKEN_SECRET).update(data).digest("hex");
+    const expected = crypto
+      .createHmac("sha256", TOKEN_SECRET)
+      .update(data)
+      .digest("hex");
     return sig === expected ? JSON.parse(data) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function loadDB() {
   if (!fs.existsSync(DB_FILE)) return {};
-  try { return JSON.parse(fs.readFileSync(DB_FILE, "utf8")); } catch { return {}; }
+  try {
+    return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+  } catch {
+    return {};
+  }
 }
 function saveDB(db) {
   const dir = path.dirname(DB_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf8");
+}
+
+function loadHistory() {
+  if (!fs.existsSync(HISTORY_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(HISTORY_FILE, "utf8"));
+  } catch {
+    return [];
+  }
+}
+function saveHistory(history) {
+  const dir = path.dirname(HISTORY_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2), "utf8");
 }
 function genSlug() {
   return crypto.randomBytes(5).toString("hex");
@@ -50,7 +79,8 @@ function genSlug() {
 
 function requireAdmin(req, res, next) {
   const token = req.headers["x-admin-token"];
-  if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+  if (!token || !verifyToken(token))
+    return res.status(401).json({ error: "Unauthorized" });
   next();
 }
 
@@ -64,9 +94,15 @@ app.post("/api/admin/login", (req, res) => {
 
 app.get("/api/admin/links", requireAdmin, (req, res) => {
   const db = loadDB();
-  res.json(Object.entries(db).map(([slug, d]) => ({
-    slug, from: d.from, to: d.to, label: d.label || "", createdAt: d.createdAt,
-  })));
+  res.json(
+    Object.entries(db).map(([slug, d]) => ({
+      slug,
+      from: d.from,
+      to: d.to,
+      label: d.label || "",
+      createdAt: d.createdAt,
+    })),
+  );
 });
 
 app.post("/api/admin/links", requireAdmin, (req, res) => {
@@ -76,8 +112,9 @@ app.post("/api/admin/links", requireAdmin, (req, res) => {
 
   const db = loadDB();
   const created = [];
+  const baseTime = Date.now();
 
-  for (const entry of entries) {
+  for (const [entryIdx, entry] of entries.entries()) {
     let from, to, pass, lbl;
     if (typeof entry === "string") {
       const parts = entry.trim().split("|");
@@ -89,19 +126,39 @@ app.post("/api/admin/links", requireAdmin, (req, res) => {
     if (!from || !to || !pass) continue;
     const slug = genSlug();
     db[slug] = {
-      from: from.trim(), to: to.trim(), pass: pass.trim(),
+      from: from.trim(),
+      to: to.trim(),
+      pass: pass.trim(),
       label: (lbl || label || "").trim(),
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(baseTime + entryIdx).toISOString(),
     };
-    created.push({ slug, from: from.trim(), to: to.trim(), label: db[slug].label });
+    created.push({
+      slug,
+      from: from.trim(),
+      to: to.trim(),
+      label: db[slug].label,
+    });
   }
   saveDB(db);
+
+  // Lưu vào history
+  if (created.length > 0) {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const ts = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+    const history = loadHistory();
+    history.unshift({ ts, count: created.length, data: created });
+    if (history.length > 50) history.splice(50);
+    saveHistory(history);
+  }
+
   res.json({ ok: true, created });
 });
 
 app.delete("/api/admin/links/:slug", requireAdmin, (req, res) => {
   const db = loadDB();
-  if (!db[req.params.slug]) return res.status(404).json({ error: "Không tìm thấy" });
+  if (!db[req.params.slug])
+    return res.status(404).json({ error: "Không tìm thấy" });
   delete db[req.params.slug];
   saveDB(db);
   res.json({ ok: true });
@@ -109,17 +166,21 @@ app.delete("/api/admin/links/:slug", requireAdmin, (req, res) => {
 
 // ── IMAP fetch ─────────────────────────────────────────────────────────────
 function fetchMails(user, pass, res, page, limit) {
-  page  = Math.max(1, parseInt(page)  || 1);
+  page = Math.max(1, parseInt(page) || 1);
   limit = Math.max(1, parseInt(limit) || PAGE_SIZE);
 
   const send = (type, data) =>
     res.write(`data: ${JSON.stringify({ type, ...data })}\n\n`);
 
   const imap = new Imap({
-    user, password: pass,
-    host: IMAP_HOST, port: IMAP_PORT,
-    tls: true, tlsOptions: { rejectUnauthorized: false },
-    connTimeout: 15000, authTimeout: 10000,
+    user,
+    password: pass,
+    host: IMAP_HOST,
+    port: IMAP_PORT,
+    tls: true,
+    tlsOptions: { rejectUnauthorized: false },
+    connTimeout: 15000,
+    authTimeout: 10000,
   });
 
   imap.once("ready", () => {
@@ -128,30 +189,38 @@ function fetchMails(user, pass, res, page, limit) {
     imap.openBox("INBOX", true, (err, box) => {
       if (err) {
         send("error", { message: `Lỗi INBOX: ${err.message}` });
-        imap.end(); return;
+        imap.end();
+        return;
       }
 
-      const total      = box.messages.total;
+      const total = box.messages.total;
       const totalPages = Math.max(1, Math.ceil(total / limit));
 
       send("meta", { total, totalPages, page, limit });
 
       if (total === 0) {
         send("done", { total: 0, totalPages: 1, page: 1 });
-        imap.end(); return;
+        imap.end();
+        return;
       }
 
-      const endSeq   = total - (page - 1) * limit;
+      const endSeq = total - (page - 1) * limit;
       const startSeq = Math.max(1, endSeq - limit + 1);
 
       if (endSeq < 1) {
         send("done", { total, totalPages, page });
-        imap.end(); return;
+        imap.end();
+        return;
       }
 
-      send("status", { message: `📥 Trang ${page}/${totalPages} (${startSeq}:${endSeq})` });
+      send("status", {
+        message: `📥 Trang ${page}/${totalPages} (${startSeq}:${endSeq})`,
+      });
 
-      const f = imap.seq.fetch(`${startSeq}:${endSeq}`, { bodies: "", struct: true });
+      const f = imap.seq.fetch(`${startSeq}:${endSeq}`, {
+        bodies: "",
+        struct: true,
+      });
 
       // ── KEY FIX: dùng Promise để đợi TẤT CẢ async parse xong ──────────
       const parsePromises = [];
@@ -162,17 +231,19 @@ function fetchMails(user, pass, res, page, limit) {
         const p = new Promise((resolve) => {
           let buffer = "";
           msg.on("body", (stream) => {
-            stream.on("data", (chunk) => { buffer += chunk.toString("utf8"); });
+            stream.on("data", (chunk) => {
+              buffer += chunk.toString("utf8");
+            });
             stream.once("end", async () => {
               try {
                 const parsed = await simpleParser(buffer);
                 resolve({
                   seqno,
-                  from:    parsed.from?.text || "",
-                  subject: parsed.subject    || "(không có tiêu đề)",
-                  date:    parsed.date ? parsed.date.toISOString() : "",
-                  text:    parsed.text || "",
-                  html:    parsed.html || "",
+                  from: parsed.from?.text || "",
+                  subject: parsed.subject || "(không có tiêu đề)",
+                  date: parsed.date ? parsed.date.toISOString() : "",
+                  text: parsed.text || "",
+                  html: parsed.html || "",
                 });
               } catch (e) {
                 resolve({ seqno, subject: "(lỗi parse)", error: e.message });
@@ -196,15 +267,41 @@ function fetchMails(user, pass, res, page, limit) {
     });
   });
 
-  imap.once("error", (err) => { send("error", { message: `Lỗi: ${err.message}` }); res.end(); });
+  imap.once("error", (err) => {
+    send("error", { message: `Lỗi: ${err.message}` });
+    res.end();
+  });
   imap.once("end", () => res.end());
   imap.connect();
 }
 
+// ── Admin: history ────────────────────────────────────────────────────────
+app.get("/api/admin/history", requireAdmin, (req, res) => {
+  res.json(loadHistory());
+});
+
+app.delete("/api/admin/history/:idx", requireAdmin, (req, res) => {
+  const history = loadHistory();
+  const idx = parseInt(req.params.idx);
+  if (isNaN(idx) || idx < 0 || idx >= history.length)
+    return res.status(404).json({ error: "Không tìm thấy" });
+  history.splice(idx, 1);
+  saveHistory(history);
+  res.json({ ok: true });
+});
+
+app.delete("/api/admin/history", requireAdmin, (req, res) => {
+  saveHistory([]);
+  res.json({ ok: true });
+});
+
 // ── Admin: export/import backup ───────────────────────────────────────────
 app.get("/api/admin/backup", requireAdmin, (req, res) => {
   const db = loadDB();
-  res.setHeader("Content-Disposition", "attachment; filename=links-backup.json");
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=links-backup.json",
+  );
   res.setHeader("Content-Type", "application/json");
   res.send(JSON.stringify(db, null, 2));
 });
@@ -234,12 +331,12 @@ app.get("/api/read/:slug", (req, res) => {
   const entry = db[req.params.slug];
   if (!entry) return res.status(404).json({ error: "Không tìm thấy" });
 
-  const page  = parseInt(req.query.page)  || 1;
+  const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || PAGE_SIZE;
 
-  res.setHeader("Content-Type",  "text/event-stream");
+  res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection",    "keep-alive");
+  res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
   fetchMails(entry.from, entry.pass, res, page, limit);
