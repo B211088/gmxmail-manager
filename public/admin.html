@@ -64,6 +64,8 @@
   .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--bg);padding:11px 20px;border-radius:4px;font-family:var(--mono);font-size:12px;z-index:999;transform:translateY(60px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
   .toast.show{transform:translateY(0);opacity:1}
   .toast.ok{background:var(--green)}
+  .btn-backup{padding:6px 14px;border-radius:3px;font-family:var(--mono);font-size:11px;cursor:pointer;background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+  .btn-backup:hover{border-color:#fff;color:#fff}
   .toast.err{background:var(--danger)}
   .filter-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap}
   .search-wrap{display:flex;align-items:center;flex:1;min-width:180px;background:var(--surface);border:1.5px solid var(--border2);border-radius:4px;padding:0 10px;gap:6px;transition:border-color .15s}
@@ -82,7 +84,7 @@
 <div id="loginOverlay">
   <div class="login-box">
     <h2>⚙ ADMIN</h2>
-    <p>LOCPHAT</p>
+    <p>Mail Link Manager</p>
     <input type="password" id="adminPass" placeholder="Mật khẩu admin..." />
     <button class="btn-main" onclick="doLogin()">Đăng nhập</button>
     <div class="login-err" id="loginErr">❌ Sai mật khẩu</div>
@@ -91,9 +93,13 @@
 
 <div id="mainApp">
   <div class="topbar">
-    <h1>✉ LOCPHAT Mail Link Manager</h1>
+    <h1>✉ Mail Link Manager</h1>
     <div style="display:flex;align-items:center;gap:12px">
       <span id="hostLabel" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4)"></span>
+      <button class="btn-backup" onclick="doBackup()" title="Tải file backup">⬇ Backup</button>
+      <label class="btn-backup" title="Khôi phục từ backup" style="cursor:pointer">
+        ⬆ Restore <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
+      </label>
       <button class="btn-sm" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
@@ -107,8 +113,8 @@
       <div id="singlePanel">
         <div style="display:flex;gap:10px;align-items:flex-end">
           <div class="fg" style="flex:1">
-            <label>Paste chuỗi acc (tự tách)</label>
-            <input id="inRaw" type="text" placeholder="froschth@gmx.de|elli_hofmann6rsk@gmx.de|uUOV2Ts8FV!S5Fm9ad2e" style="font-size:12px" />
+            <label>Nhập acc vào ô bên dưới</label>
+            <input id="inRaw" type="text" placeholder="mail làm|mail chính|pass mail chính" style="font-size:12px" />
           </div>
           <button class="btn-add" onclick="createSingle()">Tạo link</button>
         </div>
@@ -194,6 +200,7 @@ function applyFilter(){
   const clearBtn = document.getElementById('clearSearch');
   clearBtn.style.display = q ? 'block' : 'none';
 
+  // Filter
   let filtered = links.filter(l => {
     if(!q) return true;
     return (l.from||'').toLowerCase().includes(q)
@@ -202,6 +209,7 @@ function applyFilter(){
         || (l.slug||'').toLowerCase().includes(q);
   });
 
+  // Sort
   filtered = [...filtered].sort((a,b) => {
     if(sort==='oldest') return new Date(a.createdAt||0)-new Date(b.createdAt||0);
     if(sort==='label')  return (a.label||'').localeCompare(b.label||'');
@@ -209,6 +217,7 @@ function applyFilter(){
     return new Date(b.createdAt||0)-new Date(a.createdAt||0); // newest
   });
 
+  // Filter info
   const info = document.getElementById('filterInfo');
   if(q){
     info.style.display='inline';
@@ -268,6 +277,7 @@ function switchTab(t){
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(t==='single'&&i===0)||(t==='bulk'&&i===1)));
 }
 
+// Auto preview khi gõ
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('inRaw').addEventListener('input',function(){
     const val=this.value.trim();
@@ -328,6 +338,41 @@ function toast(msg,type=''){
   const el=document.getElementById('toast');
   el.textContent=msg;el.className=`toast ${type} show`;
   setTimeout(()=>{el.className='toast';},2800);
+}
+
+function doBackup(){
+  const a=document.createElement('a');
+  a.href=`/api/admin/backup`;
+  // Gắn token vào URL không được, dùng fetch rồi download
+  fetch('/api/admin/backup',{headers:H()})
+    .then(r=>r.blob())
+    .then(blob=>{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=`links-backup-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('✅ Đã tải backup!','ok');
+    }).catch(()=>toast('Lỗi backup','err'));
+}
+
+function doRestore(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const db=JSON.parse(e.target.result);
+      if(!confirm(`Khôi phục ${Object.keys(db).length} links? Dữ liệu hiện tại sẽ bị ghi đè!`)){input.value='';return;}
+      const r=await fetch('/api/admin/restore',{method:'POST',headers:H(),body:JSON.stringify(db)});
+      const d=await r.json();
+      if(d.ok){toast(`✅ Đã restore ${d.count} links`,'ok');loadLinks();}
+      else toast(d.error||'Lỗi','err');
+    }catch{toast('File không hợp lệ','err');}
+    input.value='';
+  };
+  reader.readAsText(file);
 }
 
 if(token){fetch('/api/admin/links',{headers:H()}).then(r=>{if(r.ok)showMain();else sessionStorage.removeItem('admin_token');});}
