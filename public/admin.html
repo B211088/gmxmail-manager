@@ -58,8 +58,17 @@
   .link-text:hover{text-decoration:underline}
   .btn-copy{background:none;border:1px solid var(--border);border-radius:3px;padding:3px 8px;font-family:var(--mono);font-size:10px;cursor:pointer;color:var(--muted);white-space:nowrap}
   .btn-copy:hover,.btn-copy.copied{border-color:var(--green);color:var(--green)}
-  .btn-del{background:none;border:1px solid transparent;color:var(--muted);font-size:14px;cursor:pointer;padding:4px 8px;border-radius:3px}
+  .btn-del{background:none;border:1px solid transparent;color:var(--muted);font-size:14px;cursor:pointer;padding:4px 8px;border-radius:3px;white-space:nowrap}
   .btn-del:hover{border-color:var(--danger);color:var(--danger);background:#fff0f0}
+  table{table-layout:fixed;width:100%}
+  thead th:nth-child(1){width:36px}
+  thead th:nth-child(2){width:120px}
+  thead th:nth-child(3){width:150px}
+  thead th:nth-child(4){width:170px}
+  thead th:nth-child(5){width:auto}
+  thead th:nth-child(6){width:120px}
+  thead th:nth-child(7){width:40px}
+  tbody td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:13px}
   .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--bg);padding:11px 20px;border-radius:4px;font-family:var(--mono);font-size:12px;z-index:999;transform:translateY(60px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
   .toast.show{transform:translateY(0);opacity:1}
@@ -96,9 +105,9 @@
     <h1>✉LOCPHAT Mail Link Manager</h1>
     <div style="display:flex;align-items:center;gap:12px">
       <span id="hostLabel" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4)"></span>
-      <button class="btn-backup" onclick="doBackup()" title="Tải file backup">⬇ Tải data về</button>
+      <button class="btn-backup" onclick="doBackup()" title="Tải file backup">⬇ Backup</button>
       <label class="btn-backup" title="Khôi phục từ backup" style="cursor:pointer">
-        ⬆ Tải data lên <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
+        ⬆ Restore <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
       </label>
       <button class="btn-sm" onclick="doLogout()">Đăng xuất</button>
     </div>
@@ -113,7 +122,7 @@
       <div id="singlePanel">
         <div style="display:flex;gap:10px;align-items:flex-end">
           <div class="fg" style="flex:1">
-            <label>Nhập acc vào ô bên dưới</label>
+            <label>Nhập acc vào ô phía dưới</label>
             <input id="inRaw" type="text" placeholder="mail làm | mail chính | pass mail chính" style="font-size:12px" />
           </div>
           <button class="btn-add" onclick="createSingle()">Tạo link</button>
@@ -123,7 +132,7 @@
       <div id="bulkPanel">
         <textarea class="bulk-ta" id="bulkText" placeholder="maillam|mailchinh|pass&#10;maillam|mailchinh|pass|nhãn&#10;..."></textarea>
         <div class="bulk-footer">
-          <span class="hint">Cú pháp: maillam|mailchinh|pass hoặc thêm |nhãn ở cuối</span>
+          <span class="hint">Cú pháp: maillam|mailchinh|passmailchinh</span>
           <button class="btn-bulk" onclick="createBulk()">⚡ Tạo tất cả</button>
         </div>
       </div>
@@ -301,8 +310,8 @@ async function createSingle(){
   if(!raw){toast('Paste chuỗi acc vào!','err');return;}
   const parts=raw.split('|');
   if(parts.length<3){toast('Cần đủ: maillam|mailchinh|pass','err');return;}
-  const [from,to,pass,...rest]=parts;
-  const label=rest.join('|').trim();
+  const [from,to,pass,labelPart]=parts;
+  const label=(labelPart||'').trim();
   if(!from||!to||!pass){toast('Thiếu dữ liệu!','err');return;}
   const r=await fetch('/api/admin/links',{method:'POST',headers:H(),body:JSON.stringify({entries:[{from,to,pass,label}]})});
   const d=await r.json();
@@ -343,6 +352,7 @@ function toast(msg,type=''){
 function doBackup(){
   const a=document.createElement('a');
   a.href=`/api/admin/backup`;
+  // Gắn token vào URL không được, dùng fetch rồi download
   fetch('/api/admin/backup',{headers:H()})
     .then(r=>r.blob())
     .then(blob=>{
