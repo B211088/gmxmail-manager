@@ -61,13 +61,12 @@
   .btn-del{background:none;border:1px solid transparent;color:var(--muted);font-size:14px;cursor:pointer;padding:4px 8px;border-radius:3px;white-space:nowrap}
   .btn-del:hover{border-color:var(--danger);color:var(--danger);background:#fff0f0}
   table{table-layout:fixed;width:100%}
-  thead th:nth-child(1){width:36px}
-  thead th:nth-child(2){width:120px}
-  thead th:nth-child(3){width:150px}
-  thead th:nth-child(4){width:170px}
-  thead th:nth-child(5){width:auto}
-  thead th:nth-child(6){width:120px}
-  thead th:nth-child(7){width:40px}
+  thead th:nth-child(1){width:40px}
+  thead th:nth-child(2){width:160px}
+  thead th:nth-child(3){width:160px}
+  thead th:nth-child(4){width:200px}
+  thead th:nth-child(5){width:110px}
+  thead th:nth-child(6){width:36px}
   tbody td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:13px}
   .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--bg);padding:11px 20px;border-radius:4px;font-family:var(--mono);font-size:12px;z-index:999;transform:translateY(60px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
@@ -105,9 +104,9 @@
     <h1>✉LOCPHAT Mail Link Manager</h1>
     <div style="display:flex;align-items:center;gap:12px">
       <span id="hostLabel" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4)"></span>
-      <button class="btn-backup" onclick="doBackup()" title="Tải file backup">⬇ Backup</button>
+      <button class="btn-backup" onclick="doBackup()" title="Tải file backup">⬇ Tải data về</button>
       <label class="btn-backup" title="Khôi phục từ backup" style="cursor:pointer">
-        ⬆ Restore <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
+        ⬆ Cập nhật data <input type="file" accept=".json" onchange="doRestore(this)" style="display:none">
       </label>
       <button class="btn-sm" onclick="doLogout()">Đăng xuất</button>
     </div>
@@ -122,8 +121,8 @@
       <div id="singlePanel">
         <div style="display:flex;gap:10px;align-items:flex-end">
           <div class="fg" style="flex:1">
-            <label>Nhập acc vào ô phía dưới</label>
-            <input id="inRaw" type="text" placeholder="mail làm | mail chính | pass mail chính" style="font-size:12px" />
+            <label>Nhập account vào ô phía dưới</label>
+            <input id="inRaw" type="text" placeholder="maillam|mailchinh|passchinh" style="font-size:12px" />
           </div>
           <button class="btn-add" onclick="createSingle()">Tạo link</button>
         </div>
@@ -132,7 +131,7 @@
       <div id="bulkPanel">
         <textarea class="bulk-ta" id="bulkText" placeholder="maillam|mailchinh|pass&#10;maillam|mailchinh|pass|nhãn&#10;..."></textarea>
         <div class="bulk-footer">
-          <span class="hint">Cú pháp: maillam|mailchinh|passmailchinh</span>
+          <span class="hint">Cú pháp: maillam|mailchinh|pass hoặc thêm |nhãn ở cuối</span>
           <button class="btn-bulk" onclick="createBulk()">⚡ Tạo tất cả</button>
         </div>
       </div>
@@ -158,7 +157,7 @@
         <span class="filter-info" id="filterInfo" style="display:none"></span>
       </div>
       <table>
-        <thead><tr><th>#</th><th>Nhãn</th><th>Mail làm</th><th>Mail chính</th><th>Link người dùng</th><th>Tạo lúc</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th>Mail làm</th><th>Mail chính</th><th>Link người dùng</th><th>Tạo lúc</th><th></th></tr></thead>
         <tbody id="linksTable"></tbody>
       </table>
     </div>
@@ -250,7 +249,7 @@ function renderTable(data, q){
   const tbody=document.getElementById('linksTable');
   document.getElementById('totalBadge').textContent=`${links.length} links`;
   if(!data.length){
-    tbody.innerHTML=`<tr class="empty-row"><td colspan="7">${links.length?'Không tìm thấy kết quả nào':'Chưa có link nào. Tạo ở trên nhé!'}</td></tr>`;
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="6">${links.length?'Không tìm thấy kết quả nào':'Chưa có link nào. Tạo ở trên nhé!'}</td></tr>`;
     return;
   }
   tbody.innerHTML=data.map((l,i)=>{
@@ -258,11 +257,10 @@ function renderTable(data, q){
     const dt=l.createdAt?new Date(l.createdAt).toLocaleString('vi-VN'):'';
     return `<tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td>${highlight(l.label||'—',q)}</td>
-      <td style="color:var(--muted);font-size:11px">${highlight(l.from,q)}</td>
-      <td style="color:var(--accent);font-weight:600">${highlight(l.to,q)}</td>
+      <td style="color:var(--muted);font-size:11px" title="${esc(l.from)}">${highlight(l.from,q)}</td>
+      <td style="color:var(--accent);font-weight:600" title="${esc(l.to)}">${highlight(l.to,q)}</td>
       <td><div class="link-box">
-        <a class="link-text" href="${url}" target="_blank">${url}</a>
+        <a class="link-text" href="${url}" target="_blank" title="${url}">${url}</a>
         <button class="btn-copy" onclick="copyLink('${url}',this)">copy</button>
       </div></td>
       <td style="color:var(--muted);font-size:11px">${dt}</td>
