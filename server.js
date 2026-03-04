@@ -52,6 +52,8 @@ function loadDB() {
   }
 }
 function saveDB(db) {
+  const dir = path.dirname(DB_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf8");
 }
 function genSlug() {
