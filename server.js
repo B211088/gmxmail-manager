@@ -10,7 +10,9 @@ const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-const DB_FILE = path.join(__dirname, "links.json");
+const DB_FILE = process.env.DATA_PATH
+  ? path.join(process.env.DATA_PATH, "links.json")
+  : path.join(__dirname, "links.json");
 const IMAP_HOST = "imap.gmx.net";
 const IMAP_PORT = 993;
 const PAGE_SIZE = 50;
