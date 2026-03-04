@@ -10,9 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-const DB_FILE = process.env.DATA_PATH
-  ? path.join(process.env.DATA_PATH, "links.json")
-  : path.join(__dirname, "links.json");
+const DB_FILE = path.join(__dirname, "links.json");
 const IMAP_HOST = "imap.gmx.net";
 const IMAP_PORT = 993;
 const PAGE_SIZE = 50;
@@ -244,6 +242,25 @@ function fetchMails(user, pass, res, page, limit) {
   imap.once("end", () => res.end());
   imap.connect();
 }
+
+// ── Admin: export/import backup ───────────────────────────────────────────
+app.get("/api/admin/backup", requireAdmin, (req, res) => {
+  const db = loadDB();
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=links-backup.json",
+  );
+  res.setHeader("Content-Type", "application/json");
+  res.send(JSON.stringify(db, null, 2));
+});
+
+app.post("/api/admin/restore", requireAdmin, (req, res) => {
+  const db = req.body;
+  if (typeof db !== "object" || Array.isArray(db))
+    return res.status(400).json({ error: "Dữ liệu không hợp lệ" });
+  saveDB(db);
+  res.json({ ok: true, count: Object.keys(db).length });
+});
 
 // ── Route: admin shortcut ─────────────────────────────────────────────────
 app.get("/admin", (req, res) => {
