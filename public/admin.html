@@ -334,7 +334,7 @@
         border-bottom: 1px solid var(--border);
       }
       thead th:nth-child(1) {
-        width: 40px;
+        width: 60px;
       }
       thead th:nth-child(2) {
         width: 150px;
@@ -1531,7 +1531,6 @@
         const d = await r.json();
         if (d.ok) {
           await loadHistoryFromServer();
-          // Re-render modal hiện tại
           if (document.getElementById("resultModal").style.display === "flex") {
             if (document.getElementById("resultCount").textContent === "") {
               renderHistoryFull();
@@ -1558,7 +1557,6 @@
       }
 
       function downloadResult() {
-        // Format: maillam|mailchinh|link
         const lines = lastCreated.map(
           (l) => l.from + "|" + l.to + "|" + BASE + "/m/" + l.slug,
         );
@@ -1668,7 +1666,7 @@
         });
       }
 
-      function togglePass(el, pass) {
+      function revealPass(el, pass) {
         navigator.clipboard.writeText(pass).catch(() => {});
         document
           .querySelectorAll('.pass-mask[data-shown="1"]')
@@ -1706,6 +1704,10 @@
         }
       }
 
+      function togglePass(el, pass) {
+        requirePass("🔑 Nhập mật khẩu để xem pass", () => revealPass(el, pass));
+      }
+
       function quickCopy(text, el) {
         navigator.clipboard
           .writeText(text)
@@ -1725,8 +1727,28 @@
       }
 
       let _passModalCallback = null;
+      let _backupPassVerified = false;
+      let _backupPassExpiry = 0;
+
+      function isBackupPassValid() {
+        return _backupPassVerified && Date.now() < _backupPassExpiry;
+      }
+
+      function markBackupPassVerified() {
+        _backupPassVerified = true;
+        _backupPassExpiry = Date.now() + 2 * 60 * 60 * 1000; // 2 tiếng
+      }
+
+      function resetBackupPass() {
+        _backupPassVerified = false;
+        _backupPassExpiry = 0;
+      }
 
       function requirePass(desc, callback) {
+        if (isBackupPassValid()) {
+          callback();
+          return;
+        }
         _passModalCallback = callback;
         document.getElementById("passModalDesc").textContent = desc;
         document.getElementById("passModalInput").value = "";
@@ -1749,6 +1771,7 @@
           document.getElementById("passModalInput").focus();
           return;
         }
+        markBackupPassVerified();
         closePassModal();
         if (_passModalCallback) _passModalCallback();
       }
