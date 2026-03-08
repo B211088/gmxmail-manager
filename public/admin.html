@@ -337,21 +337,18 @@
         width: 40px;
       }
       thead th:nth-child(2) {
-        width: 150px;
+        width: 170px;
       }
       thead th:nth-child(3) {
-        width: 150px;
+        width: 170px;
       }
       thead th:nth-child(4) {
         width: auto;
       }
       thead th:nth-child(5) {
-        width: 130px;
+        width: 120px;
       }
       thead th:nth-child(6) {
-        width: 100px;
-      }
-      thead th:nth-child(7) {
         width: 70px;
       }
       tbody tr {
@@ -861,7 +858,6 @@
                 <th>Mail làm</th>
                 <th>Mail chính</th>
                 <th>Link người dùng</th>
-                <th>Pass</th>
                 <th>Tạo lúc</th>
                 <th></th>
               </tr>
@@ -1092,20 +1088,12 @@
             const dt = l.createdAt
               ? new Date(l.createdAt).toLocaleString("vi-VN")
               : "";
-            const passVal = l.pass || "";
-            const passHidden = passVal
-              ? "•".repeat(Math.min(passVal.length, 12))
-              : "(trống)";
-            const safePass = esc(passVal).replace(/'/g, "&#39;");
             return `<tr>
       <td style="color:var(--muted)">${start + i + 1}</td>
-      <td class="copy-cell" onclick="quickCopy('${esc(l.from)}',this)" title="Click để copy" style="color:var(--muted);font-size:11px;cursor:pointer" title="${esc(l.from)}">${highlight(l.from, q)}</td>
-      <td class="copy-cell" onclick="quickCopy('${esc(l.to)}',this)" title="Click để copy" style="color:var(--accent);font-weight:600;cursor:pointer" title="${esc(l.to)}">${highlight(l.to, q)}</td>
+      <td class="copy-cell" onclick="quickCopy('${esc(l.from)}',this)" title="Click để copy" style="color:var(--muted);font-size:11px;cursor:pointer">${highlight(l.from, q)}</td>
+      <td class="copy-cell" onclick="quickCopy('${esc(l.to)}',this)" title="Click để copy" style="color:var(--accent);font-weight:600;cursor:pointer">${highlight(l.to, q)}</td>
       <td><div class="link-box"><a class="link-text" href="${url}" target="_blank" title="${url}">${url}</a>
         <button class="btn-copy" onclick="copyLink('${url}',this)">copy</button></div></td>
-      <td style="font-size:11px">
-        <span class="pass-mask" onclick="togglePass(this,'${safePass}')" title="Click để xem · giữ Ctrl+Click để copy" style="cursor:pointer;color:var(--muted);letter-spacing:2px;user-select:none">${passHidden}</span>
-      </td>
       <td style="color:var(--muted);font-size:11px">${dt}</td>
       <td><button class="btn-del" onclick="deleteLink('${l.slug}')">✕</button></td>
     </tr>`;
@@ -1574,47 +1562,6 @@
           input.value = "";
         };
         reader.readAsText(file);
-      }
-
-      function togglePass(el, pass) {
-        navigator.clipboard.writeText(pass).catch(() => {});
-
-        // Ẩn tất cả pass đang hiện (trừ cái đang click)
-        document
-          .querySelectorAll('.pass-mask[data-shown="1"]')
-          .forEach((other) => {
-            if (other === el) return;
-            const orig = other.dataset.orig || "";
-            other.textContent = "•".repeat(Math.min(orig.length, 12));
-            other.style.letterSpacing = "2px";
-            other.style.color = "var(--muted)";
-            other.dataset.shown = "0";
-            if (other._hideTimer) clearTimeout(other._hideTimer);
-          });
-
-        if (el.dataset.shown === "1") {
-          el.textContent = "•".repeat(Math.min(pass.length, 12));
-          el.style.letterSpacing = "2px";
-          el.style.color = "var(--muted)";
-          el.dataset.shown = "0";
-          if (el._hideTimer) clearTimeout(el._hideTimer);
-        } else {
-          el.dataset.orig = pass;
-          el.textContent = pass;
-          el.style.letterSpacing = "normal";
-          el.style.color = "var(--text)";
-          el.dataset.shown = "1";
-          showCopied(el);
-          if (el._hideTimer) clearTimeout(el._hideTimer);
-          el._hideTimer = setTimeout(() => {
-            if (el.dataset.shown === "1") {
-              el.textContent = "•".repeat(Math.min(pass.length, 12));
-              el.style.letterSpacing = "2px";
-              el.style.color = "var(--muted)";
-              el.dataset.shown = "0";
-            }
-          }, 5000);
-        }
       }
 
       function quickCopy(text, el) {
