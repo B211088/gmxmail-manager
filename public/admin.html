@@ -337,18 +337,21 @@
         width: 40px;
       }
       thead th:nth-child(2) {
-        width: 170px;
+        width: 150px;
       }
       thead th:nth-child(3) {
-        width: 170px;
+        width: 150px;
       }
       thead th:nth-child(4) {
         width: auto;
       }
       thead th:nth-child(5) {
-        width: 120px;
+        width: 130px;
       }
       thead th:nth-child(6) {
+        width: 100px;
+      }
+      thead th:nth-child(7) {
         width: 70px;
       }
       tbody tr {
@@ -532,6 +535,67 @@
         background: #eef8ee !important;
         outline: 1px solid var(--green);
         outline-offset: -1px;
+      }
+      .pass-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 300;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .pass-modal-box {
+        background: var(--surface);
+        border: 2px solid var(--text);
+        box-shadow: 5px 5px 0 #c4b99a;
+        border-radius: 6px;
+        padding: 32px;
+        width: 340px;
+        text-align: center;
+      }
+      .pass-modal-box h4 {
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .pass-modal-box p {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 20px;
+      }
+      .pass-modal-box input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--text);
+        outline: none;
+        margin-bottom: 10px;
+        transition: border-color 0.15s;
+        text-align: center;
+      }
+      .pass-modal-box input:focus {
+        border-color: var(--accent);
+      }
+      .pass-modal-err {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--danger);
+        margin-bottom: 10px;
+        display: none;
+      }
+      .pass-modal-btns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
       }
       .modal-overlay {
         position: fixed;
@@ -858,6 +922,7 @@
                 <th>Mail làm</th>
                 <th>Mail chính</th>
                 <th>Link người dùng</th>
+                <th>Pass</th>
                 <th>Tạo lúc</th>
                 <th></th>
               </tr>
@@ -955,6 +1020,31 @@
             onclick="clearHistory()"
           >
             🗑 Xóa lịch sử
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pass-modal" id="passModal" style="display: none">
+      <div class="pass-modal-box">
+        <h4>🔐 Xác nhận</h4>
+        <p id="passModalDesc">Nhập mật khẩu để tiếp tục</p>
+        <input
+          type="password"
+          id="passModalInput"
+          placeholder="Nhập mật khẩu..."
+        />
+        <div class="pass-modal-err" id="passModalErr">❌ Sai mật khẩu</div>
+        <div class="pass-modal-btns">
+          <button class="btn-cancel-confirm" onclick="closePassModal()">
+            Hủy
+          </button>
+          <button
+            class="btn-confirm"
+            style="font-size: 13px; padding: 9px 20px"
+            onclick="confirmPassModal()"
+          >
+            Xác nhận
           </button>
         </div>
       </div>
@@ -1088,12 +1178,20 @@
             const dt = l.createdAt
               ? new Date(l.createdAt).toLocaleString("vi-VN")
               : "";
+            const passVal = l.pass || "";
+            const passHidden = passVal
+              ? "•".repeat(Math.min(passVal.length, 12))
+              : "(trống)";
+            const safePass = esc(passVal).replace(/'/g, "&#39;");
             return `<tr>
       <td style="color:var(--muted)">${start + i + 1}</td>
       <td class="copy-cell" onclick="quickCopy('${esc(l.from)}',this)" title="Click để copy" style="color:var(--muted);font-size:11px;cursor:pointer">${highlight(l.from, q)}</td>
       <td class="copy-cell" onclick="quickCopy('${esc(l.to)}',this)" title="Click để copy" style="color:var(--accent);font-weight:600;cursor:pointer">${highlight(l.to, q)}</td>
       <td><div class="link-box"><a class="link-text" href="${url}" target="_blank" title="${url}">${url}</a>
         <button class="btn-copy" onclick="copyLink('${url}',this)">copy</button></div></td>
+      <td style="font-size:11px">
+        <span class="pass-mask" onclick="togglePass(this,'${safePass}')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--muted);letter-spacing:2px;user-select:none">${passHidden}</span>
+      </td>
       <td style="color:var(--muted);font-size:11px">${dt}</td>
       <td><button class="btn-del" onclick="deleteLink('${l.slug}')">✕</button></td>
     </tr>`;
@@ -1514,54 +1612,98 @@
       }
 
       function doBackup() {
-        fetch("/api/admin/backup", { headers: H() })
-          .then((r) => r.blob())
-          .then((blob) => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download =
-              "links-backup-" + new Date().toISOString().slice(0, 10) + ".json";
-            a.click();
-            URL.revokeObjectURL(url);
-            toast("Đã tải backup!", "ok");
-          })
-          .catch(() => toast("Lỗi backup", "err"));
+        requirePass("Xác nhận để tải file backup", () => {
+          fetch("/api/admin/backup", { headers: H() })
+            .then((r) => r.blob())
+            .then((blob) => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download =
+                "links-backup-" +
+                new Date().toISOString().slice(0, 10) +
+                ".json";
+              a.click();
+              URL.revokeObjectURL(url);
+              toast("Đã tải backup!", "ok");
+            })
+            .catch(() => toast("Lỗi backup", "err"));
+        });
       }
 
       function doRestore(input) {
         const file = input.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          try {
-            const db = JSON.parse(e.target.result);
-            if (
-              !confirm(
-                "Khôi phục " +
-                  Object.keys(db).length +
-                  " links? Dữ liệu hiện tại sẽ bị ghi đè!",
-              )
-            ) {
-              input.value = "";
-              return;
+        requirePass("Xác nhận để restore data", () => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            try {
+              const db = JSON.parse(e.target.result);
+              if (
+                !confirm(
+                  "Khôi phục " +
+                    Object.keys(db).length +
+                    " links? Dữ liệu hiện tại sẽ bị ghi đè!",
+                )
+              ) {
+                input.value = "";
+                return;
+              }
+              const r = await fetch("/api/admin/restore", {
+                method: "POST",
+                headers: H(),
+                body: JSON.stringify(db),
+              });
+              const d = await r.json();
+              if (d.ok) {
+                toast("Đã restore " + d.count + " links", "ok");
+                loadLinks();
+              } else toast(d.error || "Lỗi", "err");
+            } catch {
+              toast("File không hợp lệ", "err");
             }
-            const r = await fetch("/api/admin/restore", {
-              method: "POST",
-              headers: H(),
-              body: JSON.stringify(db),
-            });
-            const d = await r.json();
-            if (d.ok) {
-              toast("Đã restore " + d.count + " links", "ok");
-              loadLinks();
-            } else toast(d.error || "Lỗi", "err");
-          } catch {
-            toast("File không hợp lệ", "err");
-          }
-          input.value = "";
-        };
-        reader.readAsText(file);
+            input.value = "";
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      function togglePass(el, pass) {
+        navigator.clipboard.writeText(pass).catch(() => {});
+        document
+          .querySelectorAll('.pass-mask[data-shown="1"]')
+          .forEach((other) => {
+            if (other === el) return;
+            const orig = other.dataset.orig || "";
+            other.textContent = "•".repeat(Math.min(orig.length, 12));
+            other.style.letterSpacing = "2px";
+            other.style.color = "var(--muted)";
+            other.dataset.shown = "0";
+            if (other._hideTimer) clearTimeout(other._hideTimer);
+          });
+        if (el.dataset.shown === "1") {
+          el.textContent = "•".repeat(Math.min(pass.length, 12));
+          el.style.letterSpacing = "2px";
+          el.style.color = "var(--muted)";
+          el.dataset.shown = "0";
+          if (el._hideTimer) clearTimeout(el._hideTimer);
+        } else {
+          el.dataset.orig = pass;
+          el.textContent = pass;
+          el.style.letterSpacing = "normal";
+          el.style.color = "var(--text)";
+          el.dataset.shown = "1";
+          showCopied(el);
+          if (el._hideTimer) clearTimeout(el._hideTimer);
+          el._hideTimer = setTimeout(() => {
+            if (el.dataset.shown === "1") {
+              el.textContent = "•".repeat(Math.min(pass.length, 12));
+              el.style.letterSpacing = "2px";
+              el.style.color = "var(--muted)";
+              el.dataset.shown = "0";
+            }
+          }, 5000);
+        }
       }
 
       function quickCopy(text, el) {
@@ -1581,6 +1723,55 @@
           el.style.outline = orig;
         }, 1000);
       }
+
+      let _passModalCallback = null;
+
+      function requirePass(desc, callback) {
+        _passModalCallback = callback;
+        document.getElementById("passModalDesc").textContent = desc;
+        document.getElementById("passModalInput").value = "";
+        document.getElementById("passModalErr").style.display = "none";
+        document.getElementById("passModal").style.display = "flex";
+        setTimeout(() => document.getElementById("passModalInput").focus(), 50);
+      }
+
+      async function confirmPassModal() {
+        const val = document.getElementById("passModalInput").value;
+        const r = await fetch("/api/admin/verify-backup-pass", {
+          method: "POST",
+          headers: H(),
+          body: JSON.stringify({ password: val }),
+        });
+        const d = await r.json();
+        if (!d.ok) {
+          document.getElementById("passModalErr").style.display = "block";
+          document.getElementById("passModalInput").value = "";
+          document.getElementById("passModalInput").focus();
+          return;
+        }
+        closePassModal();
+        if (_passModalCallback) _passModalCallback();
+      }
+
+      function closePassModal() {
+        document.getElementById("passModal").style.display = "none";
+        _passModalCallback = null;
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.key === "Enter" &&
+          document.getElementById("passModal").style.display === "flex"
+        ) {
+          confirmPassModal();
+        }
+        if (
+          e.key === "Escape" &&
+          document.getElementById("passModal").style.display === "flex"
+        ) {
+          closePassModal();
+        }
+      });
 
       function esc(s) {
         return String(s || "")

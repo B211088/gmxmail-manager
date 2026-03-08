@@ -21,6 +21,7 @@ const IMAP_HOST = "imap.gmx.net";
 const IMAP_PORT = 993;
 const PAGE_SIZE = 50;
 const ADMIN_PASSWORD = process.env.ADMIN_PASS || "admin123";
+const BACKUP_PASSWORD = process.env.BACKUP_PASS || "backup123";
 const TOKEN_SECRET = process.env.TOKEN_SECRET || "gmx-reader-secret-2024";
 
 function signToken(payload) {
@@ -288,6 +289,15 @@ function fetchMails(user, pass, res, page, limit, filterFrom) {
   imap.once("end", () => res.end());
   imap.connect();
 }
+
+// ── Admin: verify backup pass ────────────────────────────────────────────
+app.post("/api/admin/verify-backup-pass", requireAdmin, (req, res) => {
+  if (req.body.password === BACKUP_PASSWORD) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ ok: false });
+  }
+});
 
 // ── Admin: history ────────────────────────────────────────────────────────
 app.get("/api/admin/history", requireAdmin, (req, res) => {
