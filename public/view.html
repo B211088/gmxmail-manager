@@ -1,367 +1,807 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mail Viewer</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden}
-body{background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;display:flex;flex-direction:column}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mail Viewer</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        background: #fff;
+        color: #1a1a1a;
+        font-family: "Inter", sans-serif;
+        display: flex;
+        flex-direction: column;
+      }
 
-/* TOPBAR */
-.topbar{height:48px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;background:#fff}
-.topbar-logo{font-size:18px}
-.topbar-title{font-size:14px;font-weight:600;color:#111}
-.topbar-mail{font-size:12px;color:#888}
-.topbar-status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:#999}
-.status-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0}
-.status-dot.connecting{background:#f59e0b;animation:pulse 1s infinite}
-.status-dot.ok{background:#22c55e}
-.status-dot.err{background:#ef4444}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+      /* TOPBAR */
+      .topbar {
+        height: 48px;
+        border-bottom: 1px solid #e5e5e5;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 10px;
+        flex-shrink: 0;
+        background: #fff;
+      }
+      .topbar-logo {
+        font-size: 18px;
+      }
+      .topbar-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
+      }
+      .topbar-mail {
+        font-size: 12px;
+        color: #888;
+      }
+      .topbar-status {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #999;
+      }
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #ccc;
+        flex-shrink: 0;
+      }
+      .status-dot.connecting {
+        background: #f59e0b;
+        animation: pulse 1s infinite;
+      }
+      .status-dot.ok {
+        background: #22c55e;
+      }
+      .status-dot.err {
+        background: #ef4444;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
 
-/* LAYOUT */
-.layout{display:flex;flex:1;overflow:hidden}
+      /* LAYOUT */
+      .layout {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
 
-/* SIDEBAR */
-.sidebar{width:300px;flex-shrink:0;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;background:#fafafa}
-.sidebar-head{padding:12px 16px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.sidebar-head h2{font-size:13px;font-weight:600;color:#333}
-.mail-count-badge{font-size:11px;color:#888;background:#efefef;padding:2px 8px;border-radius:10px}
+      /* SIDEBAR */
+      .sidebar {
+        width: 300px;
+        flex-shrink: 0;
+        border-right: 1px solid #e5e5e5;
+        display: flex;
+        flex-direction: column;
+        background: #fafafa;
+      }
+      .sidebar-head {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e5e5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .sidebar-head h2 {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .mail-count-badge {
+        font-size: 11px;
+        color: #888;
+        background: #efefef;
+        padding: 2px 8px;
+        border-radius: 10px;
+      }
 
-/* Mail list scroll area */
-.mail-list-wrap{flex:1;overflow-y:auto;display:flex;flex-direction:column}
-.mail-list{flex:1}
+      /* Mail list scroll area */
+      .mail-list-wrap {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      .mail-list {
+        flex: 1;
+      }
 
-/* PAGINATION BAR - dưới sidebar */
-.page-bar{border-top:1px solid #e5e5e5;padding:8px 10px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;background:#fff;gap:6px}
-.page-info{font-size:10px;color:#999;white-space:nowrap}
-.page-btns{display:flex;flex-wrap:wrap;gap:3px;align-items:center;justify-content:center;width:100%}
-.page-btn{height:26px;min-width:26px;padding:0 6px;border:1px solid #e0e0e0;background:#fff;border-radius:4px;font-size:11px;cursor:pointer;color:#555;transition:all .12s;display:flex;align-items:center;justify-content:center}
-.page-btn:hover:not(:disabled){background:#f0f4ff;border-color:#3b82f6;color:#3b82f6}
-.page-btn:disabled{opacity:.4;cursor:not-allowed}
-.page-btn.active{background:#3b82f6;border-color:#3b82f6;color:#fff;font-weight:600}
-.page-dots{font-size:11px;color:#bbb;padding:0 1px}
+      /* PAGINATION BAR - dưới sidebar */
+      .page-bar {
+        border-top: 1px solid #e5e5e5;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+        background: #fff;
+        gap: 6px;
+      }
+      .page-info {
+        font-size: 10px;
+        color: #999;
+        white-space: nowrap;
+      }
+      .page-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+      .page-btn {
+        height: 26px;
+        min-width: 26px;
+        padding: 0 6px;
+        border: 1px solid #e0e0e0;
+        background: #fff;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        color: #555;
+        transition: all 0.12s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .page-btn:hover:not(:disabled) {
+        background: #f0f4ff;
+        border-color: #3b82f6;
+        color: #3b82f6;
+      }
+      .page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .page-btn.active {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #fff;
+        font-weight: 600;
+      }
+      .page-dots {
+        font-size: 11px;
+        color: #bbb;
+        padding: 0 1px;
+      }
 
-/* Mail items */
-.mail-item{padding:12px 16px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .1s;position:relative}
-.mail-item:hover{background:#f5f5f5}
-.mail-item.active{background:#eff6ff;border-right:2px solid #3b82f6}
-.mail-item-from{font-size:12px;font-weight:600;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.mail-item-subject{font-size:12px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.mail-item-date{font-size:10px;color:#bbb}
-.mail-item-unread::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#3b82f6}
+      /* Mail items */
+      .mail-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background 0.1s;
+        position: relative;
+      }
+      .mail-item:hover {
+        background: #f5f5f5;
+      }
+      .mail-item.active {
+        background: #eff6ff;
+        border-right: 2px solid #3b82f6;
+      }
+      .mail-item-from {
+        font-size: 12px;
+        font-weight: 600;
+        color: #222;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 3px;
+      }
+      .mail-item-subject {
+        font-size: 12px;
+        color: #555;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 3px;
+      }
+      .mail-item-date {
+        font-size: 10px;
+        color: #bbb;
+      }
+      .mail-item-unread::before {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #3b82f6;
+      }
 
-/* Skeleton */
-.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:3px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skel-item{padding:14px 16px;border-bottom:1px solid #f0f0f0}
-.skel-line{height:10px;margin-bottom:6px}
+      /* Skeleton */
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e8e8e8 50%,
+          #f0f0f0 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.2s infinite;
+        border-radius: 3px;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+      .skel-item {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .skel-line {
+        height: 10px;
+        margin-bottom: 6px;
+      }
 
-/* MAILBOX */
-.mailbox{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;gap:10px}
-.empty-state .icon{font-size:48px}
-.empty-state p{font-size:13px}
-.mail-detail{flex:1;display:none;flex-direction:column;overflow:hidden}
-.mail-detail-head{padding:20px 24px;border-bottom:1px solid #f0f0f0;flex-shrink:0}
-.mail-detail-subject{font-size:18px;font-weight:600;color:#111;line-height:1.3;margin-bottom:12px}
-.mail-detail-meta{display:flex;align-items:center;gap:10px}
-.mail-detail-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#3b82f6;flex-shrink:0}
-.mail-detail-from{font-size:13px;font-weight:500;color:#222}
-.mail-detail-addr{font-size:11px;color:#999;margin-top:1px}
-.mail-detail-date{margin-left:auto;font-size:11px;color:#bbb;white-space:nowrap}
-.mail-detail-body{flex:1;overflow-y:auto;padding:24px}
-.mail-body-html{font-size:14px;line-height:1.7;color:#333;max-width:680px}
-.mail-body-html a{color:#3b82f6}
-.mail-body-html img{max-width:100%;height:auto}
-.mail-body-text{font-family:'Courier New',monospace;font-size:13px;line-height:1.7;color:#444;white-space:pre-wrap;word-break:break-word;max-width:680px}
+      /* MAILBOX */
+      .mailbox {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #ccc;
+        gap: 10px;
+      }
+      .empty-state .icon {
+        font-size: 48px;
+      }
+      .empty-state p {
+        font-size: 13px;
+      }
+      .mail-detail {
+        flex: 1;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .mail-detail-head {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        flex-shrink: 0;
+      }
+      .mail-detail-subject {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111;
+        line-height: 1.3;
+        margin-bottom: 12px;
+      }
+      .mail-detail-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .mail-detail-av {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #3b82f6;
+        flex-shrink: 0;
+      }
+      .mail-detail-from {
+        font-size: 13px;
+        font-weight: 500;
+        color: #222;
+      }
+      .mail-detail-addr {
+        font-size: 11px;
+        color: #999;
+        margin-top: 1px;
+      }
+      .mail-detail-date {
+        margin-left: auto;
+        font-size: 11px;
+        color: #bbb;
+        white-space: nowrap;
+      }
+      .mail-detail-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+      }
+      .mail-body-html {
+        font-size: 14px;
+        line-height: 1.7;
+        color: #333;
+        max-width: 680px;
+      }
+      .mail-body-html a {
+        color: #3b82f6;
+      }
+      .mail-body-html img {
+        max-width: 100%;
+        height: auto;
+      }
+      .mail-body-text {
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        line-height: 1.7;
+        color: #444;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-width: 680px;
+      }
 
-/* scrollbar */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+      /* scrollbar */
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #ddd;
+        border-radius: 3px;
+      }
 
-/* Mobile */
-@media(max-width:600px){
-  .sidebar{width:100%;position:absolute;z-index:10;height:100%;transition:transform .25s}
-  .sidebar.hidden{transform:translateX(-100%)}
-  .back-btn{display:flex!important}
-}
-.back-btn{display:none;align-items:center;gap:6px;font-size:12px;color:#3b82f6;cursor:pointer;padding:12px 24px 0;flex-shrink:0}
-.reload-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid #e0e0e0;border-radius:6px;background:#fff;font-size:12px;color:#555;cursor:pointer;transition:all .15s;font-family:inherit}
-.reload-btn:hover{border-color:#3b82f6;color:#3b82f6;background:#f0f4ff}
-.reload-btn.spinning .reload-icon{animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.reload-icon{display:inline-block;font-size:13px}
-</style>
-</head>
-<body>
-
-<div class="topbar">
-  <span class="topbar-logo">✉</span>
-  <span class="topbar-title">Mail Viewer</span>
-  <span class="topbar-mail" id="topMail"></span>
-  <div class="topbar-status">
-    <div class="status-dot connecting" id="statusDot"></div>
-    <span id="statusText">Đang kết nối...</span>
-  </div>
-  <button class="reload-btn" id="reloadBtn" onclick="reloadMails()" title="Tải lại mail mới nhất">
-    <span class="reload-icon" id="reloadIcon">↻</span>
-    <span>Tải lại</span>
-  </button>
-</div>
-
-<div class="layout">
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-head">
-      <h2>Hộp thư đến</h2>
-      <span class="mail-count-badge" id="mailCountBadge">...</span>
+      /* Mobile */
+      @media (max-width: 600px) {
+        .sidebar {
+          width: 100%;
+          position: absolute;
+          z-index: 10;
+          height: 100%;
+          transition: transform 0.25s;
+        }
+        .sidebar.hidden {
+          transform: translateX(-100%);
+        }
+        .back-btn {
+          display: flex !important;
+        }
+      }
+      .back-btn {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #3b82f6;
+        cursor: pointer;
+        padding: 12px 24px 0;
+        flex-shrink: 0;
+      }
+      .reload-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 12px;
+        color: #555;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .reload-btn:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #f0f4ff;
+      }
+      .reload-btn.spinning .reload-icon {
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .reload-icon {
+        display: inline-block;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <span class="topbar-logo">✉</span>
+      <span class="topbar-title">Mail Viewer</span>
+      <span class="topbar-mail" id="topMail"></span>
+      <div class="topbar-status">
+        <div class="status-dot connecting" id="statusDot"></div>
+        <span id="statusText">Đang kết nối...</span>
+      </div>
+      <button
+        class="reload-btn"
+        id="reloadBtn"
+        onclick="reloadMails()"
+        title="Tải lại mail mới nhất"
+      >
+        <span class="reload-icon" id="reloadIcon">↻</span>
+        <span>Tải lại</span>
+      </button>
     </div>
 
-    <div class="mail-list-wrap">
-      <div class="mail-list" id="mailList">
-        <div class="skel-item"><div class="skel-line skeleton" style="width:55%"></div><div class="skel-line skeleton" style="width:80%"></div><div class="skel-line skeleton" style="width:30%"></div></div>
-        <div class="skel-item"><div class="skel-line skeleton" style="width:65%"></div><div class="skel-line skeleton" style="width:70%"></div><div class="skel-line skeleton" style="width:35%"></div></div>
-        <div class="skel-item"><div class="skel-line skeleton" style="width:45%"></div><div class="skel-line skeleton" style="width:85%"></div><div class="skel-line skeleton" style="width:28%"></div></div>
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-head">
+          <h2>Hộp thư đến</h2>
+          <span class="mail-count-badge" id="mailCountBadge">...</span>
+        </div>
+
+        <div class="mail-list-wrap">
+          <div class="mail-list" id="mailList">
+            <div class="skel-item">
+              <div class="skel-line skeleton" style="width: 55%"></div>
+              <div class="skel-line skeleton" style="width: 80%"></div>
+              <div class="skel-line skeleton" style="width: 30%"></div>
+            </div>
+            <div class="skel-item">
+              <div class="skel-line skeleton" style="width: 65%"></div>
+              <div class="skel-line skeleton" style="width: 70%"></div>
+              <div class="skel-line skeleton" style="width: 35%"></div>
+            </div>
+            <div class="skel-item">
+              <div class="skel-line skeleton" style="width: 45%"></div>
+              <div class="skel-line skeleton" style="width: 85%"></div>
+              <div class="skel-line skeleton" style="width: 28%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="page-bar" id="pageBar" style="display: none">
+          <span class="page-info" id="pageInfo"></span>
+          <div class="page-btns" id="pageBtns"></div>
+        </div>
+      </div>
+
+      <!-- MAILBOX -->
+      <div class="mailbox" id="mailbox">
+        <div class="back-btn" id="backBtn" onclick="showSidebar()">
+          ← Quay lại
+        </div>
+        <div class="empty-state" id="emptyState">
+          <div class="icon">📭</div>
+          <p>Chọn một email để xem</p>
+        </div>
+        <div class="mail-detail" id="mailDetail"></div>
       </div>
     </div>
 
-    <!-- PAGINATION -->
-    <div class="page-bar" id="pageBar" style="display:none">
-      <span class="page-info" id="pageInfo"></span>
-      <div class="page-btns" id="pageBtns"></div>
-    </div>
-  </div>
+    <script>
+      const slug = window.location.pathname.split("/").pop();
+      let mails = [];
+      let activeIdx = -1;
+      let currentPage = 1;
+      let totalPages = 1;
+      let totalMails = 0;
+      const PAGE_SIZE = 50;
+      let currentES = null;
 
-  <!-- MAILBOX -->
-  <div class="mailbox" id="mailbox">
-    <div class="back-btn" id="backBtn" onclick="showSidebar()">← Quay lại</div>
-    <div class="empty-state" id="emptyState">
-      <div class="icon">📭</div>
-      <p>Chọn một email để xem</p>
-    </div>
-    <div class="mail-detail" id="mailDetail"></div>
-  </div>
-</div>
+      const mailList = document.getElementById("mailList");
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+      const emptyState = document.getElementById("emptyState");
+      const mailDetail = document.getElementById("mailDetail");
+      const pageBar = document.getElementById("pageBar");
+      const pageInfo = document.getElementById("pageInfo");
+      const pageBtns = document.getElementById("pageBtns");
+      const mailCountBadge = document.getElementById("mailCountBadge");
 
-<script>
-const slug = window.location.pathname.split('/').pop();
-let mails = [];
-let activeIdx = -1;
-let currentPage = 1;
-let totalPages = 1;
-let totalMails = 0;
-const PAGE_SIZE = 50;
-let currentES = null;
+      function setStatus(msg, state) {
+        statusText.textContent = msg;
+        statusDot.className = "status-dot " + (state || "");
+      }
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function initials(from) {
+        return ((from || "").split("<")[0].trim() || from || "?")
+          .substring(0, 2)
+          .toUpperCase();
+      }
+      function shortFrom(from) {
+        const m = (from || "").match(/<(.+)>/);
+        const n = (from || "").split("<")[0].trim();
+        return n || (m && m[1]) || from || "?";
+      }
+      function fmtShort(iso) {
+        if (!iso) return "";
+        const d = new Date(iso);
+        const t = new Date();
+        return d.toDateString() === t.toDateString()
+          ? d.toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+      }
+      function fmtFull(iso) {
+        return iso ? new Date(iso).toLocaleString("vi-VN") : "";
+      }
 
-const mailList    = document.getElementById('mailList');
-const statusDot   = document.getElementById('statusDot');
-const statusText  = document.getElementById('statusText');
-const emptyState  = document.getElementById('emptyState');
-const mailDetail  = document.getElementById('mailDetail');
-const pageBar     = document.getElementById('pageBar');
-const pageInfo    = document.getElementById('pageInfo');
-const pageBtns    = document.getElementById('pageBtns');
-const mailCountBadge = document.getElementById('mailCountBadge');
-
-function setStatus(msg, state){
-  statusText.textContent = msg;
-  statusDot.className = 'status-dot ' + (state||'');
-}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function initials(from){return ((from||'').split('<')[0].trim()||from||'?').substring(0,2).toUpperCase();}
-function shortFrom(from){const m=(from||'').match(/<(.+)>/);const n=(from||'').split('<')[0].trim();return n||(m&&m[1])||from||'?';}
-function fmtShort(iso){if(!iso)return '';const d=new Date(iso);const t=new Date();return d.toDateString()===t.toDateString()?d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});}
-function fmtFull(iso){return iso?new Date(iso).toLocaleString('vi-VN'):'';}
-
-// ── Render sidebar mail items ─────────────────────────────────────────────
-function renderMailList(){
-  if(!mails.length){
-    mailList.innerHTML=`<div style="padding:30px;text-align:center;font-size:12px;color:#bbb">Trang này không có mail</div>`;
-    return;
-  }
-  mailList.innerHTML = mails.map((m,i)=>`
+      // ── Render sidebar mail items ─────────────────────────────────────────────
+      function renderMailList() {
+        if (!mails.length) {
+          mailList.innerHTML = `<div style="padding:30px;text-align:center;font-size:12px;color:#bbb">Trang này không có mail</div>`;
+          return;
+        }
+        mailList.innerHTML = mails
+          .map(
+            (m, i) => `
     <div class="mail-item mail-item-unread" data-idx="${i}" onclick="selectMail(${i})">
       <div class="mail-item-from">${esc(shortFrom(m.from))}</div>
-      <div class="mail-item-subject">${esc(m.subject||'(không có tiêu đề)')}</div>
+      <div class="mail-item-subject">${esc(m.subject || "(không có tiêu đề)")}</div>
       <div class="mail-item-date">${fmtShort(m.date)}</div>
-    </div>`).join('');
-}
+    </div>`,
+          )
+          .join("");
+      }
 
-// ── Select mail by object reference ──────────────────────────────────────
-function selectMailObj(m, activeEl) {
-  document.querySelectorAll('.mail-item').forEach(el => {
-    el.classList.remove('active', 'mail-item-unread');
-  });
-  activeEl.classList.add('active');
-  activeEl.classList.remove('mail-item-unread');
-  emptyState.style.display='none';
-  mailDetail.style.display='flex';
-  mailDetail.style.flexDirection='column';
-  const body = m.html
-    ?`<div class="mail-body-html">${m.html}</div>`
-    :`<div class="mail-body-text">${esc(m.text||'(Không có nội dung)')}</div>`;
-  mailDetail.innerHTML=`
+      // ── Select mail by object reference ──────────────────────────────────────
+      function selectMailObj(m, activeEl) {
+        document.querySelectorAll(".mail-item").forEach((el) => {
+          el.classList.remove("active", "mail-item-unread");
+        });
+        activeEl.classList.add("active");
+        activeEl.classList.remove("mail-item-unread");
+        emptyState.style.display = "none";
+        mailDetail.style.display = "flex";
+        mailDetail.style.flexDirection = "column";
+        const body = m.html
+          ? `<div class="mail-body-html">${m.html}</div>`
+          : `<div class="mail-body-text">${esc(m.text || "(Không có nội dung)")}</div>`;
+        mailDetail.innerHTML = `
     <div class="mail-detail-head">
-      <div class="mail-detail-subject">${esc(m.subject||'(không có tiêu đề)')}</div>
+      <div class="mail-detail-subject">${esc(m.subject || "(không có tiêu đề)")}</div>
       <div class="mail-detail-meta">
         <div class="mail-detail-av">${initials(m.from)}</div>
         <div>
           <div class="mail-detail-from">${esc(shortFrom(m.from))}</div>
-          <div class="mail-detail-addr">${esc(m.from||'')}</div>
+          <div class="mail-detail-addr">${esc(m.from || "")}</div>
         </div>
         <div class="mail-detail-date">${fmtFull(m.date)}</div>
       </div>
     </div>
     <div class="mail-detail-body">${body}</div>`;
-  if(window.innerWidth<=600){
-    document.getElementById('sidebar').classList.add('hidden');
-    document.getElementById('backBtn').style.display='flex';
-  }
-}
+        if (window.innerWidth <= 600) {
+          document.getElementById("sidebar").classList.add("hidden");
+          document.getElementById("backBtn").style.display = "flex";
+        }
+      }
 
-// Keep selectMail for backward compat with renderMailList
-function selectMail(idx){
-  const items = document.querySelectorAll('.mail-item');
-  selectMailObj(mails[idx], items[idx]);
-}
+      // Keep selectMail for backward compat with renderMailList
+      function selectMail(idx) {
+        const items = document.querySelectorAll(".mail-item");
+        selectMailObj(mails[idx], items[idx]);
+      }
 
-// ── Render pagination ─────────────────────────────────────────────────────
-function renderPagination(){
-  if(totalPages <= 1){ pageBar.style.display='none'; return; }
-  pageBar.style.display='flex';
-  pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
+      // ── Render pagination ─────────────────────────────────────────────────────
+      function renderPagination() {
+        if (totalPages <= 1) {
+          pageBar.style.display = "none";
+          return;
+        }
+        pageBar.style.display = "flex";
+        pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
 
-  // Tạo danh sách số trang hiển thị
-  const pages = [];
-  if(totalPages <= 7){
-    for(let i=1;i<=totalPages;i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if(currentPage > 3) pages.push('...');
-    for(let i=Math.max(2,currentPage-1); i<=Math.min(totalPages-1,currentPage+1); i++) pages.push(i);
-    if(currentPage < totalPages-2) pages.push('...');
-    pages.push(totalPages);
-  }
+        // Tạo danh sách số trang hiển thị
+        const pages = [];
+        if (totalPages <= 7) {
+          for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+          pages.push(1);
+          if (currentPage > 3) pages.push("...");
+          for (
+            let i = Math.max(2, currentPage - 1);
+            i <= Math.min(totalPages - 1, currentPage + 1);
+            i++
+          )
+            pages.push(i);
+          if (currentPage < totalPages - 2) pages.push("...");
+          pages.push(totalPages);
+        }
 
-  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage<=1?'disabled':''}>‹</button>`;
-  for(const p of pages){
-    if(p==='...') html+=`<span class="page-dots">…</span>`;
-    else html+=`<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
-  }
-  html+=`<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage>=totalPages?'disabled':''}>›</button>`;
-  pageBtns.innerHTML = html;
-}
+        let html = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage <= 1 ? "disabled" : ""}>‹</button>`;
+        for (const p of pages) {
+          if (p === "...") html += `<span class="page-dots">…</span>`;
+          else
+            html += `<button class="page-btn ${p === currentPage ? "active" : ""}" onclick="goPage(${p})">${p}</button>`;
+        }
+        html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage >= totalPages ? "disabled" : ""}>›</button>`;
+        pageBtns.innerHTML = html;
+      }
 
-function goPage(p){
-  if(p<1||p>totalPages||p===currentPage) return;
-  currentPage = p;
-  mails = [];
-  activeIdx = -1;
-  emptyState.style.display='flex';
-  mailDetail.style.display='none';
-  mailList.innerHTML=`
+      function goPage(p) {
+        if (p < 1 || p > totalPages || p === currentPage) return;
+        currentPage = p;
+        mails = [];
+        activeIdx = -1;
+        emptyState.style.display = "flex";
+        mailDetail.style.display = "none";
+        mailList.innerHTML = `
     <div class="skel-item"><div class="skel-line skeleton" style="width:55%"></div><div class="skel-line skeleton" style="width:80%"></div></div>
     <div class="skel-item"><div class="skel-line skeleton" style="width:65%"></div><div class="skel-line skeleton" style="width:70%"></div></div>
     <div class="skel-item"><div class="skel-line skeleton" style="width:45%"></div><div class="skel-line skeleton" style="width:85%"></div></div>`;
-  if(currentES){ currentES.close(); currentES=null; }
-  startSSE();
-}
+        if (currentES) {
+          currentES.close();
+          currentES = null;
+        }
+        startSSE();
+      }
 
-function showSidebar(){
-  document.getElementById('sidebar').classList.remove('hidden');
-  document.getElementById('backBtn').style.display='none';
-}
+      function showSidebar() {
+        document.getElementById("sidebar").classList.remove("hidden");
+        document.getElementById("backBtn").style.display = "none";
+      }
 
-function reloadMails(){
-  const btn  = document.getElementById('reloadBtn');
-  const icon = document.getElementById('reloadIcon');
-  if(btn.classList.contains('spinning')) return; // đang load rồi
+      function reloadMails() {
+        const btn = document.getElementById("reloadBtn");
+        const icon = document.getElementById("reloadIcon");
+        if (btn.classList.contains("spinning")) return; // đang load rồi
 
-  // Reset về trang 1
-  currentPage = 1;
-  mails = [];
-  activeIdx = -1;
+        // Reset về trang 1
+        currentPage = 1;
+        mails = [];
+        activeIdx = -1;
 
-  // Reset UI
-  emptyState.style.display = 'flex';
-  mailDetail.style.display = 'none';
-  mailList.innerHTML = `
+        // Reset UI
+        emptyState.style.display = "flex";
+        mailDetail.style.display = "none";
+        mailList.innerHTML = `
     <div class="skel-item"><div class="skel-line skeleton" style="width:55%"></div><div class="skel-line skeleton" style="width:80%"></div></div>
     <div class="skel-item"><div class="skel-line skeleton" style="width:65%"></div><div class="skel-line skeleton" style="width:70%"></div></div>
     <div class="skel-item"><div class="skel-line skeleton" style="width:45%"></div><div class="skel-line skeleton" style="width:85%"></div></div>`;
 
-  // Spin icon
-  btn.classList.add('spinning');
-  if(currentES){ currentES.close(); currentES = null; }
+        // Spin icon
+        btn.classList.add("spinning");
+        if (currentES) {
+          currentES.close();
+          currentES = null;
+        }
 
-  // Khi done, stop spin
-  const origOnDone = () => {
-    btn.classList.remove('spinning');
-  };
-  window._reloadDoneCallback = origOnDone;
+        // Khi done, stop spin
+        const origOnDone = () => {
+          btn.classList.remove("spinning");
+        };
+        window._reloadDoneCallback = origOnDone;
 
-  startSSE();
-}
+        startSSE();
+      }
 
-// ── Load info & start SSE ─────────────────────────────────────────────────
-fetch(`/api/info/${slug}`).then(r=>r.json()).then(d=>{
-  if(d.error){setStatus('Link không tồn tại','err');mailList.innerHTML=`<div style="padding:20px;font-size:12px;color:#999;text-align:center">Link không tồn tại</div>`;return;}
-  document.getElementById('topMail').textContent = '— ' + d.to;
-  startSSE();
-}).catch(()=>setStatus('Lỗi kết nối server','err'));
+      // ── Load info & start SSE ─────────────────────────────────────────────────
+      fetch(`/api/info/${slug}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.error) {
+            setStatus("Link không tồn tại", "err");
+            mailList.innerHTML = `<div style="padding:20px;font-size:12px;color:#999;text-align:center">Link không tồn tại</div>`;
+            return;
+          }
+          document.getElementById("topMail").textContent = "— " + d.from;
+          startSSE();
+        })
+        .catch(() => setStatus("Lỗi kết nối server", "err"));
 
-function startSSE(){
-  setStatus('Đang kết nối IMAP...','connecting');
-  const es = new EventSource(`/api/read/${slug}?page=${currentPage}&limit=${PAGE_SIZE}`);
-  currentES = es;
-  let firstMail = true;
+      function startSSE() {
+        setStatus("Đang kết nối IMAP...", "connecting");
+        const es = new EventSource(
+          `/api/read/${slug}?page=${currentPage}&limit=${PAGE_SIZE}`,
+        );
+        currentES = es;
+        let firstMail = true;
 
-  es.onmessage = e => {
-    let d; try{d=JSON.parse(e.data);}catch{return;}
+        es.onmessage = (e) => {
+          let d;
+          try {
+            d = JSON.parse(e.data);
+          } catch {
+            return;
+          }
 
-    if(d.type==='status'){
-      setStatus(d.message.replace(/[✅📬📥]/g,'').trim(),'connecting');
-    }
-    else if(d.type==='meta'){
-      totalMails = d.total;
-      totalPages = d.totalPages;
-      mailCountBadge.textContent = `${d.total} mail`;
-      renderPagination();
-    }
-    else if(d.type==='error'){
-      setStatus(d.message,'err');
-    }
-    else if(d.type==='mail'){
-      if(firstMail){ mailList.innerHTML=''; firstMail=false; }
-      mails.push(d);
-      const mailObj = d;
-      const item = document.createElement('div');
-      item.className='mail-item mail-item-unread';
-      item.onclick = () => selectMailObj(mailObj, item);
-      item.innerHTML=`
+          if (d.type === "status") {
+            setStatus(d.message.replace(/[✅📬📥]/g, "").trim(), "connecting");
+          } else if (d.type === "meta") {
+            totalMails = d.total;
+            totalPages = d.totalPages;
+            if (d.filteredCount !== undefined) {
+              mailCountBadge.textContent = `${d.filteredCount} mail`;
+            } else {
+              mailCountBadge.textContent = `${d.total} mail`;
+            }
+            renderPagination();
+          } else if (d.type === "error") {
+            setStatus(d.message, "err");
+          } else if (d.type === "mail") {
+            if (firstMail) {
+              mailList.innerHTML = "";
+              firstMail = false;
+            }
+            mails.push(d);
+            const mailObj = d;
+            const item = document.createElement("div");
+            item.className = "mail-item mail-item-unread";
+            item.onclick = () => selectMailObj(mailObj, item);
+            item.innerHTML = `
         <div class="mail-item-from">${esc(shortFrom(d.from))}</div>
-        <div class="mail-item-subject">${esc(d.subject||'(không có tiêu đề)')}</div>
+        <div class="mail-item-subject">${esc(d.subject || "(không có tiêu đề)")}</div>
         <div class="mail-item-date">${fmtShort(d.date)}</div>`;
-      mailList.appendChild(item);
-    }
-    else if(d.type==='done'){
-      totalMails = d.total || totalMails;
-      totalPages = d.totalPages || totalPages;
-      setStatus(`${totalMails} email — trang ${currentPage}/${totalPages}`,'ok');
-      mailCountBadge.textContent = `${totalMails} mail`;
-      renderPagination();
-      es.close();
-      if(!mails.length) mailList.innerHTML=`<div style="padding:30px;text-align:center;font-size:12px;color:#bbb">Hộp thư trống</div>`;
-      if(window._reloadDoneCallback){ window._reloadDoneCallback(); window._reloadDoneCallback=null; }
-    }
-  };
-  es.onerror = ()=>{setStatus('Mất kết nối','err');es.close();};
-}
-</script>
-</body>
+            mailList.appendChild(item);
+          } else if (d.type === "done") {
+            totalMails = d.total || totalMails;
+            totalPages = d.totalPages || totalPages;
+            const shownCount =
+              d.filteredCount !== undefined ? d.filteredCount : totalMails;
+            setStatus(
+              `${shownCount} mail — trang ${currentPage}/${totalPages}`,
+              "ok",
+            );
+            if (d.filteredCount !== undefined) {
+              mailCountBadge.textContent = `${d.filteredCount} mail`;
+            } else {
+              mailCountBadge.textContent = `${totalMails} mail`;
+            }
+            renderPagination();
+            es.close();
+            if (!mails.length)
+              mailList.innerHTML = `<div style="padding:30px;text-align:center;font-size:12px;color:#bbb">Hộp thư trống</div>`;
+            if (window._reloadDoneCallback) {
+              window._reloadDoneCallback();
+              window._reloadDoneCallback = null;
+            }
+          }
+        };
+        es.onerror = () => {
+          setStatus("Mất kết nối", "err");
+          es.close();
+        };
+      }
+    </script>
+  </body>
 </html>

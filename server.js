@@ -7,7 +7,8 @@ const path = require("path");
 const crypto = require("crypto");
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "200mb" }));
+app.use(express.urlencoded({ limit: "200mb", extended: true }));
 app.use(express.static("public"));
 
 const DB_FILE = process.env.DATA_PATH
@@ -99,6 +100,7 @@ app.get("/api/admin/links", requireAdmin, (req, res) => {
       slug,
       from: d.from,
       to: d.to,
+      pass: d.pass,
       label: d.label || "",
       createdAt: d.createdAt,
     })),
@@ -123,25 +125,25 @@ app.post("/api/admin/links", requireAdmin, (req, res) => {
     } else {
       ({ from, to, pass, label: lbl } = entry);
     }
+    from = (from || "").trim();
+    to = (to || "").trim();
+    pass = (pass || "").trim();
     if (!from || !to || !pass) continue;
     const slug = genSlug();
     db[slug] = {
-      from: from.trim(),
-      to: to.trim(),
-      pass: pass.trim(),
+      from,
+      to,
+      pass,
       label: (lbl || label || "").trim(),
       createdAt: new Date(baseTime + entryIdx).toISOString(),
     };
-    created.push({
-      slug,
-      from: from.trim(),
-      to: to.trim(),
-      label: db[slug].label,
-    });
+    created.push({ slug, from, to, label: db[slug].label });
   }
+
+  // Write DB 1 lần
   saveDB(db);
 
-  // Lưu vào history
+  // Lưu history — chỉ lưu slug+from+to để không phình file
   if (created.length > 0) {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
@@ -165,7 +167,7 @@ app.delete("/api/admin/links/:slug", requireAdmin, (req, res) => {
 });
 
 // ── IMAP fetch ─────────────────────────────────────────────────────────────
-function fetchMails(user, pass, res, page, limit) {
+function fetchMails(user, pass, res, page, limit, filterFrom) {
   page = Math.max(1, parseInt(page) || 1);
   limit = Math.max(1, parseInt(limit) || PAGE_SIZE);
 
@@ -194,40 +196,27 @@ function fetchMails(user, pass, res, page, limit) {
       }
 
       const total = box.messages.total;
-      const totalPages = Math.max(1, Math.ceil(total / limit));
-
-      send("meta", { total, totalPages, page, limit });
 
       if (total === 0) {
+        send("meta", { total: 0, totalPages: 1, page: 1, limit });
         send("done", { total: 0, totalPages: 1, page: 1 });
         imap.end();
         return;
       }
 
+      // Fetch trang hiện tại theo sequence (mới nhất trước)
       const endSeq = total - (page - 1) * limit;
       const startSeq = Math.max(1, endSeq - limit + 1);
 
-      if (endSeq < 1) {
-        send("done", { total, totalPages, page });
-        imap.end();
-        return;
-      }
-
-      send("status", {
-        message: `📥 Trang ${page}/${totalPages} (${startSeq}:${endSeq})`,
-      });
+      send("status", { message: `📥 Đang tải mail...` });
 
       const f = imap.seq.fetch(`${startSeq}:${endSeq}`, {
         bodies: "",
         struct: true,
       });
-
-      // ── KEY FIX: dùng Promise để đợi TẤT CẢ async parse xong ──────────
       const parsePromises = [];
-      const mails = [];
 
       f.on("message", (msg, seqno) => {
-        // Tạo promise cho từng mail, push vào array NGAY LÚC nhận message
         const p = new Promise((resolve) => {
           let buffer = "";
           msg.on("body", (stream) => {
@@ -240,6 +229,7 @@ function fetchMails(user, pass, res, page, limit) {
                 resolve({
                   seqno,
                   from: parsed.from?.text || "",
+                  to: parsed.to?.text || "",
                   subject: parsed.subject || "(không có tiêu đề)",
                   date: parsed.date ? parsed.date.toISOString() : "",
                   text: parsed.text || "",
@@ -257,11 +247,35 @@ function fetchMails(user, pass, res, page, limit) {
       f.once("error", (err) => send("error", { message: err.message }));
 
       f.once("end", async () => {
-        // Đợi TẤT CẢ promise parse xong mới sort và send
-        const results = await Promise.all(parsePromises);
+        let results = await Promise.all(parsePromises);
         results.sort((a, b) => b.seqno - a.seqno);
+
+        // Filter: chỉ giữ mail có To chứa maillam
+        if (filterFrom) {
+          const target = filterFrom.toLowerCase();
+          results = results.filter((m) =>
+            (m.to || "").toLowerCase().includes(target),
+          );
+        }
+
+        // filteredTotal = số mail thực sau filter trên trang này
+        // Dùng total hộp thư gốc để ước tính totalPages (không thể biết chính xác)
+        const totalPages = Math.max(1, Math.ceil(total / limit));
+        send("meta", {
+          total,
+          totalPages,
+          page,
+          limit,
+          filteredCount: results.length,
+        });
+
         for (const m of results) send("mail", m);
-        send("done", { total, totalPages, page });
+        send("done", {
+          total,
+          totalPages,
+          page,
+          filteredCount: results.length,
+        });
         imap.end();
       });
     });
@@ -339,7 +353,7 @@ app.get("/api/read/:slug", (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
-  fetchMails(entry.from, entry.pass, res, page, limit);
+  fetchMails(entry.from, entry.pass, res, page, limit, entry.from);
 });
 
 app.get("/api/info/:slug", (req, res) => {
