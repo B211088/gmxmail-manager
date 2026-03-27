@@ -730,7 +730,7 @@
         .catch(() => setStatus("Lỗi kết nối server", "err"));
 
       function startSSE() {
-        setStatus("Đang kết nối IMAP...", "connecting");
+        setStatus("Đang kết nối....", "connecting");
         const es = new EventSource(
           `/api/read/${slug}?page=${currentPage}&limit=${PAGE_SIZE}`,
         );

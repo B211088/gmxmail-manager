@@ -289,7 +289,7 @@ function _tryTOnlineHosts(user, pass, res, page, limit, filterFrom, send, idx) {
 
   const cfg = TONLINE_HOSTS[idx];
   console.log(`[T-Online] Thử ${cfg.host}:${cfg.port} cho ${user}`);
-  send("status", { message: `🔄 Đang thử ${cfg.host}...` });
+  send("status", { message: `🔄 Đang thử kết nối...` });
 
   const imap = new Imap({
     user,
@@ -307,7 +307,7 @@ function _tryTOnlineHosts(user, pass, res, page, limit, filterFrom, send, idx) {
   imap.once("ready", () => {
     connected = true;
     console.log(`[T-Online] ✅ Connected via ${cfg.host}`);
-    send("status", { message: `✅ Kết nối ${cfg.host} thành công` });
+    send("status", { message: `✅ Kết nối t-online thành công` });
     _fetchInbox(imap, send, page, limit, filterFrom);
   });
 
