@@ -39,9 +39,15 @@ function detectMailType(email) {
 }
 
 const PAGE_SIZE = 50;
-const ADMIN_PASSWORD = process.env.ADMIN_PASS || "admin123";
-const BACKUP_PASSWORD = process.env.BACKUP_PASS || "backup123";
-const TOKEN_SECRET = process.env.TOKEN_SECRET || "gmx-reader-secret-2024";
+const ADMIN_PASSWORD = process.env.ADMIN_PASS;
+const BACKUP_PASSWORD = process.env.BACKUP_PASS;
+const TOKEN_SECRET = process.env.TOKEN_SECRET;
+if (!ADMIN_PASSWORD || !BACKUP_PASSWORD || !TOKEN_SECRET) {
+  console.error(
+    "❌ Thiếu biến môi trường: ADMIN_PASS, BACKUP_PASS, TOKEN_SECRET",
+  );
+  process.exit(1);
+}
 
 function signToken(payload) {
   const data = JSON.stringify(payload);

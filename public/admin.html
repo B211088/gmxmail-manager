@@ -396,7 +396,7 @@
         width: 95px;
       }
       thead th:nth-child(10) {
-        width: 50px;
+        width: 70px;
       }
       tbody tr {
         border-bottom: 1px solid var(--border);
@@ -1670,16 +1670,20 @@
         toast("Đã tải " + lastCreated.length + " links!", "ok");
       }
       async function deleteLink(slug) {
-        if (!confirm("Xóa link này?")) return;
-        const r = await fetch("/api/admin/links/" + slug, {
-          method: "DELETE",
-          headers: H(),
+        requirePass("🗑 Xác nhận để xóa link", () => {
+          if (!confirm("Xóa link này?")) return;
+          fetch("/api/admin/links/" + slug, {
+            method: "DELETE",
+            headers: H(),
+          })
+            .then((r) => r.json())
+            .then((d) => {
+              if (d.ok) {
+                toast("Đã xóa", "ok");
+                loadLinks();
+              }
+            });
         });
-        const d = await r.json();
-        if (d.ok) {
-          toast("Đã xóa", "ok");
-          loadLinks();
-        }
       }
       function copyLink(url, btn) {
         navigator.clipboard.writeText(url).then(() => {
