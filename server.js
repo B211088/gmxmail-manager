@@ -151,10 +151,10 @@ app.post("/api/admin/links", requireAdmin, (req, res) => {
       const parts = entry.trim().split("|");
       if (parts.length < 3) continue;
       if (parts.length >= 5) {
-        // 5 cột → t-online: maillam|mailchinh|pass_web|passwort_email_prog|2fa
-        [from, to, pass, imapPass, twofa, lbl] = parts;
+        // 5 cột → t-online: maillam|mailchinh|passchinh|2fa|passimap
+        [from, to, pass, twofa, imapPass, lbl] = parts;
       } else if (parts.length === 4) {
-        // 4 cột → t-online không có 2FA: maillam|mailchinh|pass_web|passwort_email_prog
+        // 4 cột → t-online không có 2FA: maillam|mailchinh|passchinh|passimap
         [from, to, pass, imapPass, lbl] = parts;
         twofa = "";
       } else {

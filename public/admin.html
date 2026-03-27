@@ -914,7 +914,7 @@
           <textarea
             class="bulk-ta"
             id="inRaw"
-            placeholder="GMX      (3 cột):  maillam@gmx.de|mailchinh@gmx.de|pass_web&#10;T-Online (5 cột):  maillam@t-online.de|mailchinh@t-online.de|pass_web|passwort_email_prog|2FA&#10;&#10;T-Online: cột 4 = Passwort für E-Mail-Programme (dùng để IMAP)"
+            placeholder="GMX      (3 cột):  maillam@gmx.de|mailchinh@gmx.de|pass_web&#10;T-Online (5 cột):  maillam@t-online.de|mailchinh@t-online.de|passchinh|2fa|passimap"
           ></textarea>
           <div class="preview-box" id="previewBox"></div>
           <div class="bulk-footer">
@@ -922,10 +922,7 @@
               <span class="hl-green">GMX (3 cột):</span>
               maillam|mailchinh|pass_web<br />
               <span class="hl-blue">T-Online (5 cột):</span>
-              maillam|mailchinh|pass_web|<b>passwort_email_prog</b>|2FA
-              &nbsp;<span style="color: var(--danger); font-size: 10px"
-                >⚠ cột 4 = Passwort für E-Mail-Programme</span
-              >
+              maillam|mailchinh|passchinh|2fa| <b>passimap</b> &nbsp;
             </span>
             <button class="btn-add" onclick="previewAll()">👁 Xem trước</button>
           </div>
@@ -974,8 +971,8 @@
                 <th>Mail chính</th>
                 <th>Link người dùng</th>
                 <th>Pass Web</th>
-                <th>IMAP Pass</th>
                 <th>2FA</th>
+                <th>IMAP Pass</th>
                 <th>Tạo lúc</th>
                 <th></th>
               </tr>
@@ -1235,16 +1232,16 @@
               ? "•".repeat(Math.min(passVal.length, 12))
               : "(trống)";
             const safePass = esc(passVal).replace(/'/g, "&#39;");
-            const imapPassVal = l.imapPass || "";
-            const imapPassHidden = imapPassVal
-              ? "•".repeat(Math.min(imapPassVal.length, 12))
-              : "";
-            const safeImapPass = esc(imapPassVal).replace(/'/g, "&#39;");
             const twofaVal = l.twofa || "";
             const twofaHidden = twofaVal
               ? "•".repeat(Math.min(twofaVal.length, 12))
               : "";
             const safeTwofa = esc(twofaVal).replace(/'/g, "&#39;");
+            const imapPassVal = l.imapPass || "";
+            const imapPassHidden = imapPassVal
+              ? "•".repeat(Math.min(imapPassVal.length, 12))
+              : "";
+            const safeImapPass = esc(imapPassVal).replace(/'/g, "&#39;");
             const mType = l.mailType || "gmx";
             const typeBadge =
               mType === "tonline"
@@ -1257,16 +1254,17 @@
   <td class="copy-cell" onclick="quickCopy('${esc(l.to)}',this)" title="Click để copy" style="color:var(--accent);font-weight:600;cursor:pointer">${highlight(l.to, q)}</td>
   <td><div class="link-box"><a class="link-text" href="${url}" target="_blank" title="${url}">${url}</a><button class="btn-copy" onclick="copyLink('${url}',this)">copy</button></div></td>
   <td style="font-size:11px"><span class="pass-mask" onclick="toggleSecret(this,'${safePass}','🔑 Xem pass web')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--muted);letter-spacing:2px;user-select:none">${passHidden}</span></td>
+    <td style="font-size:11px">${
+      twofaVal
+        ? `<span class="pass-mask" onclick="toggleSecret(this,'${safeTwofa}','🔑 Xem 2FA')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--blue);letter-spacing:2px;user-select:none">${twofaHidden}</span>`
+        : '<span style="color:var(--border)">—</span>'
+    }</td>
   <td style="font-size:11px">${
     imapPassVal
       ? `<span class="pass-mask" onclick="toggleSecret(this,'${safeImapPass}','🔑 Xem IMAP pass')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--green);letter-spacing:2px;user-select:none">${imapPassHidden}</span>`
       : '<span style="color:var(--border)">—</span>'
   }</td>
-  <td style="font-size:11px">${
-    twofaVal
-      ? `<span class="pass-mask" onclick="toggleSecret(this,'${safeTwofa}','🔑 Xem 2FA')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--blue);letter-spacing:2px;user-select:none">${twofaHidden}</span>`
-      : '<span style="color:var(--border)">—</span>'
-  }</td>
+
   <td style="color:var(--muted);font-size:11px">${dt}</td>
   <td><button class="btn-del" onclick="deleteLink('${l.slug}')">✕</button></td>
 </tr>`;
