@@ -18,6 +18,7 @@
         --accent: #d04a00;
         --green: #1a6b3a;
         --danger: #c0392b;
+        --blue: #1a4fa0;
         --mono: "IBM Plex Mono", monospace;
         --sans: "Bricolage Grotesque", sans-serif;
       }
@@ -150,7 +151,7 @@
         color: #fff;
       }
       .content {
-        max-width: 1050px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 36px 24px;
       }
@@ -171,7 +172,7 @@
       }
       .bulk-ta {
         width: 100%;
-        height: 110px;
+        height: 120px;
         padding: 12px;
         border: 1.5px solid var(--border);
         border-radius: 3px;
@@ -189,7 +190,7 @@
       .bulk-footer {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         margin-top: 10px;
         flex-wrap: wrap;
         gap: 8px;
@@ -198,6 +199,18 @@
         font-family: var(--mono);
         font-size: 11px;
         color: var(--muted);
+        line-height: 1.9;
+      }
+      .hint b {
+        color: var(--text);
+      }
+      .hint .hl-blue {
+        color: var(--blue);
+        font-weight: 600;
+      }
+      .hint .hl-green {
+        color: var(--green);
+        font-weight: 600;
       }
       .btn-add {
         padding: 9px 22px;
@@ -209,6 +222,7 @@
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
+        flex-shrink: 0;
       }
       .btn-add:hover {
         opacity: 0.85;
@@ -253,6 +267,26 @@
         font-size: 10px;
         padding: 3px 10px;
         border-radius: 20px;
+      }
+      .type-badge {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 10px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .type-badge.gmx {
+        background: #e8f4ea;
+        color: var(--green);
+        border: 1px solid #b5d9bc;
+      }
+      .type-badge.tonline {
+        background: #e8eef8;
+        color: var(--blue);
+        border: 1px solid #b5c8e8;
       }
       .filter-bar {
         display: flex;
@@ -333,26 +367,36 @@
         letter-spacing: 1px;
         border-bottom: 1px solid var(--border);
       }
+      /* Col widths: # | Loại | Mail làm | Mail chính | Link | Pass | 2FA | Tạo lúc | Del */
       thead th:nth-child(1) {
-        width: 60px;
+        width: 44px;
       }
       thead th:nth-child(2) {
-        width: 150px;
+        width: 72px;
       }
       thead th:nth-child(3) {
-        width: 150px;
-      }
-      thead th:nth-child(4) {
-        width: auto;
-      }
-      thead th:nth-child(5) {
         width: 130px;
       }
+      thead th:nth-child(4) {
+        width: 130px;
+      }
+      thead th:nth-child(5) {
+        width: auto;
+      }
       thead th:nth-child(6) {
-        width: 100px;
+        width: 95px;
       }
       thead th:nth-child(7) {
-        width: 70px;
+        width: 95px;
+      }
+      thead th:nth-child(8) {
+        width: 95px;
+      }
+      thead th:nth-child(9) {
+        width: 95px;
+      }
+      thead th:nth-child(10) {
+        width: 50px;
       }
       tbody tr {
         border-bottom: 1px solid var(--border);
@@ -536,6 +580,7 @@
         outline: 1px solid var(--green);
         outline-offset: -1px;
       }
+      /* pass modal */
       .pass-modal {
         position: fixed;
         inset: 0;
@@ -597,6 +642,7 @@
         gap: 8px;
         justify-content: center;
       }
+      /* modal */
       .modal-overlay {
         position: fixed;
         inset: 0;
@@ -677,7 +723,7 @@
       }
       .result-from {
         color: var(--muted);
-        min-width: 160px;
+        min-width: 150px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -685,7 +731,7 @@
       }
       .result-to {
         color: var(--accent);
-        min-width: 160px;
+        min-width: 150px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -868,15 +914,19 @@
           <textarea
             class="bulk-ta"
             id="inRaw"
-            placeholder="maillam|mailchinh|pass&#10;maillam|mailchinh|pass&#10;&#10;Paste 1 dòng hoặc nhiều dòng đều được"
+            placeholder="GMX      (3 cột):  maillam@gmx.de|mailchinh@gmx.de|pass_web&#10;T-Online (5 cột):  maillam@t-online.de|mailchinh@t-online.de|pass_web|passwort_email_prog|2FA&#10;&#10;T-Online: cột 4 = Passwort für E-Mail-Programme (dùng để IMAP)"
           ></textarea>
           <div class="preview-box" id="previewBox"></div>
-
           <div class="bulk-footer">
-            <span class="hint"
-              >Cú pháp: maillam|mailchinh|pass — hỗ trợ nhiều dòng cùng
-              lúc</span
-            >
+            <span class="hint">
+              <span class="hl-green">GMX (3 cột):</span>
+              maillam|mailchinh|pass_web<br />
+              <span class="hl-blue">T-Online (5 cột):</span>
+              maillam|mailchinh|pass_web|<b>passwort_email_prog</b>|2FA
+              &nbsp;<span style="color: var(--danger); font-size: 10px"
+                >⚠ cột 4 = Passwort für E-Mail-Programme</span
+              >
+            </span>
             <button class="btn-add" onclick="previewAll()">👁 Xem trước</button>
           </div>
         </div>
@@ -892,7 +942,7 @@
               <input
                 id="searchInput"
                 type="text"
-                placeholder="Tìm mail, slug..."
+                placeholder="Tìm mail, slug, gmx/t-online..."
                 oninput="applyFilter()"
               />
               <button
@@ -919,10 +969,13 @@
             <thead>
               <tr>
                 <th>#</th>
+                <th>Loại</th>
                 <th>Mail làm</th>
                 <th>Mail chính</th>
                 <th>Link người dùng</th>
-                <th>Pass</th>
+                <th>Pass Web</th>
+                <th>IMAP Pass</th>
+                <th>2FA</th>
                 <th>Tạo lúc</th>
                 <th></th>
               </tr>
@@ -1125,7 +1178,8 @@
           return (
             (l.from || "").toLowerCase().includes(q) ||
             (l.to || "").toLowerCase().includes(q) ||
-            (l.slug || "").toLowerCase().includes(q)
+            (l.slug || "").toLowerCase().includes(q) ||
+            (l.mailType || "gmx").toLowerCase().includes(q)
           );
         });
         filtered = [...filtered].sort((a, b) => {
@@ -1138,9 +1192,7 @@
         if (q) {
           info.style.display = "inline";
           info.textContent = `${filtered.length} / ${links.length} kết quả`;
-        } else {
-          info.style.display = "none";
-        }
+        } else info.style.display = "none";
         filteredLinks = filtered;
         currentPage = 1;
         renderPage();
@@ -1164,7 +1216,7 @@
         document.getElementById("totalBadge").textContent =
           `${links.length} links`;
         if (!data.length) {
-          tbody.innerHTML = `<tr class="empty-row"><td colspan="6">${links.length ? "Không tìm thấy kết quả nào" : "Chưa có link nào. Tạo ở trên nhé!"}</td></tr>`;
+          tbody.innerHTML = `<tr class="empty-row"><td colspan="10">${links.length ? "Không tìm thấy kết quả nào" : "Chưa có link nào. Tạo ở trên nhé!"}</td></tr>`;
           pg.style.display = "none";
           return;
         }
@@ -1183,20 +1235,44 @@
               ? "•".repeat(Math.min(passVal.length, 12))
               : "(trống)";
             const safePass = esc(passVal).replace(/'/g, "&#39;");
+            const imapPassVal = l.imapPass || "";
+            const imapPassHidden = imapPassVal
+              ? "•".repeat(Math.min(imapPassVal.length, 12))
+              : "";
+            const safeImapPass = esc(imapPassVal).replace(/'/g, "&#39;");
+            const twofaVal = l.twofa || "";
+            const twofaHidden = twofaVal
+              ? "•".repeat(Math.min(twofaVal.length, 12))
+              : "";
+            const safeTwofa = esc(twofaVal).replace(/'/g, "&#39;");
+            const mType = l.mailType || "gmx";
+            const typeBadge =
+              mType === "tonline"
+                ? `<span class="type-badge tonline">T-Online</span>`
+                : `<span class="type-badge gmx">GMX</span>`;
             return `<tr>
-      <td style="color:var(--muted)">${start + i + 1}</td>
-      <td class="copy-cell" onclick="quickCopy('${esc(l.from)}',this)" title="Click để copy" style="color:var(--muted);font-size:11px;cursor:pointer">${highlight(l.from, q)}</td>
-      <td class="copy-cell" onclick="quickCopy('${esc(l.to)}',this)" title="Click để copy" style="color:var(--accent);font-weight:600;cursor:pointer">${highlight(l.to, q)}</td>
-      <td><div class="link-box"><a class="link-text" href="${url}" target="_blank" title="${url}">${url}</a>
-        <button class="btn-copy" onclick="copyLink('${url}',this)">copy</button></div></td>
-      <td style="font-size:11px">
-        <span class="pass-mask" onclick="togglePass(this,'${safePass}')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--muted);letter-spacing:2px;user-select:none">${passHidden}</span>
-      </td>
-      <td style="color:var(--muted);font-size:11px">${dt}</td>
-      <td><button class="btn-del" onclick="deleteLink('${l.slug}')">✕</button></td>
-    </tr>`;
+  <td style="color:var(--muted)">${start + i + 1}</td>
+  <td>${typeBadge}</td>
+  <td class="copy-cell" onclick="quickCopy('${esc(l.from)}',this)" title="Click để copy" style="color:var(--muted);font-size:11px;cursor:pointer">${highlight(l.from, q)}</td>
+  <td class="copy-cell" onclick="quickCopy('${esc(l.to)}',this)" title="Click để copy" style="color:var(--accent);font-weight:600;cursor:pointer">${highlight(l.to, q)}</td>
+  <td><div class="link-box"><a class="link-text" href="${url}" target="_blank" title="${url}">${url}</a><button class="btn-copy" onclick="copyLink('${url}',this)">copy</button></div></td>
+  <td style="font-size:11px"><span class="pass-mask" onclick="toggleSecret(this,'${safePass}','🔑 Xem pass web')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--muted);letter-spacing:2px;user-select:none">${passHidden}</span></td>
+  <td style="font-size:11px">${
+    imapPassVal
+      ? `<span class="pass-mask" onclick="toggleSecret(this,'${safeImapPass}','🔑 Xem IMAP pass')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--green);letter-spacing:2px;user-select:none">${imapPassHidden}</span>`
+      : '<span style="color:var(--border)">—</span>'
+  }</td>
+  <td style="font-size:11px">${
+    twofaVal
+      ? `<span class="pass-mask" onclick="toggleSecret(this,'${safeTwofa}','🔑 Xem 2FA')" title="Click để xem/ẩn" style="cursor:pointer;color:var(--blue);letter-spacing:2px;user-select:none">${twofaHidden}</span>`
+      : '<span style="color:var(--border)">—</span>'
+  }</td>
+  <td style="color:var(--muted);font-size:11px">${dt}</td>
+  <td><button class="btn-del" onclick="deleteLink('${l.slug}')">✕</button></td>
+</tr>`;
           })
           .join("");
+
         if (totalPages <= 1) {
           pg.style.display = "none";
           return;
@@ -1244,7 +1320,7 @@
         renderPage();
       }
 
-      // Preview khi gõ
+      // Live preview khi gõ
       document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("inRaw").addEventListener("input", function () {
           const raw = this.value.trim();
@@ -1262,27 +1338,41 @@
             return;
           }
           box.style.display = "block";
+          const gmx = lines.filter((l) => l.split("|").length === 3);
+          const ton = lines.filter((l) => l.split("|").length >= 4);
+          const bad = lines.length - gmx.length - ton.length;
           if (lines.length === 1) {
-            const parts = lines[0].split("|");
-            if (parts.length >= 3) {
+            const p = lines[0].split("|");
+            if (p.length >= 3) {
+              const typeHtml =
+                p.length >= 4
+                  ? '<span style="color:var(--blue)">T-Online</span>'
+                  : '<span style="color:var(--green)">GMX</span>';
               box.innerHTML =
-                "OK <b>1 acc</b> — " +
-                esc(parts[0]) +
+                "OK " +
+                typeHtml +
+                " — " +
+                esc(p[0]) +
                 ' → <span style="color:var(--accent)">' +
-                esc(parts[1]) +
-                "</span> · Pass: " +
-                "•".repeat(Math.min(parts[2].length, 20));
+                esc(p[1]) +
+                "</span>";
             } else {
-              box.innerHTML = "Cần đủ: maillam|mailchinh|pass";
+              box.innerHTML = "Cần đủ: maillam|mailchinh|pass [|2FA]";
             }
           } else {
-            const valid = lines.filter((l) => l.split("|").length >= 3);
-            const bad = lines.length - valid.length;
-            box.innerHTML =
-              "OK <b>" +
-              valid.length +
-              " acc</b> hợp lệ" +
-              (bad ? " — " + bad + " dòng thiếu dữ liệu" : "");
+            let txt = "OK <b>" + (gmx.length + ton.length) + " acc</b>";
+            if (gmx.length)
+              txt +=
+                ' &nbsp;·&nbsp; <span style="color:var(--green)">' +
+                gmx.length +
+                " GMX</span>";
+            if (ton.length)
+              txt +=
+                ' &nbsp;·&nbsp; <span style="color:var(--blue)">' +
+                ton.length +
+                " T-Online</span>";
+            if (bad) txt += " &nbsp;·&nbsp; ⚠️ " + bad + " dòng lỗi";
+            box.innerHTML = txt;
           }
         });
       });
@@ -1310,10 +1400,21 @@
         }
         pendingLines = valid;
 
+        const gmxCnt = valid.filter((l) => l.split("|").length === 3).length;
+        const tonCnt = valid.filter((l) => l.split("|").length >= 4).length;
+        let countTxt = "<b>" + valid.length + " acc</b>";
+        if (gmxCnt)
+          countTxt +=
+            ' &nbsp;<span style="color:var(--green)">(' +
+            gmxCnt +
+            " GMX)</span>";
+        if (tonCnt)
+          countTxt +=
+            ' &nbsp;<span style="color:var(--blue)">(' +
+            tonCnt +
+            " T-Online)</span>";
         document.getElementById("confirmText").innerHTML =
-          "<b>" +
-          valid.length +
-          " acc</b> sẵn sàng tạo link" +
+          countTxt +
           (invalid
             ? " &nbsp;·&nbsp; ⚠️ " + invalid + " dòng lỗi bị bỏ qua"
             : "");
@@ -1324,12 +1425,18 @@
           show
             .map((l) => {
               const p = l.split("|");
+              const isTon = p.length >= 4;
+              const badge = isTon
+                ? '<span style="color:var(--blue);font-size:9px;border:1px solid #b5c8e8;border-radius:8px;padding:1px 5px;margin-left:4px">T-Online</span>'
+                : '<span style="color:var(--green);font-size:9px;border:1px solid #b5d9bc;border-radius:8px;padding:1px 5px;margin-left:4px">GMX</span>';
               return (
                 '<div style="padding:3px 0;border-bottom:1px solid var(--border)">' +
                 esc(p[0]) +
                 ' <span style="color:var(--muted)">→</span> <span style="color:var(--accent)">' +
                 esc(p[1]) +
-                "</span></div>"
+                "</span>" +
+                badge +
+                "</div>"
               );
             })
             .join("") +
@@ -1355,26 +1462,22 @@
         const lines = [...pendingLines];
         pendingLines = [];
         document.getElementById("confirmModal").style.display = "none";
-
-        // Hiện loading
-        const btn = document.querySelector(".btn-confirm");
         const overlay = document.createElement("div");
         overlay.id = "loadingOverlay";
         overlay.style.cssText =
           "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;font-family:var(--mono);font-size:13px";
         overlay.innerHTML =
           '<div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></div>' +
-          '<div id="loadingText">⚡ Đang tạo ' +
+          "<div>⚡ Đang tạo " +
           lines.length +
           " links...</div>";
         document.body.appendChild(overlay);
-
         try {
           const r = await fetch("/api/admin/links", {
             method: "POST",
             headers: H(),
             body: JSON.stringify({ entries: lines }),
-            signal: AbortSignal.timeout(120000), // 2 phút timeout
+            signal: AbortSignal.timeout(120000),
           });
           const d = await r.json();
           document.body.removeChild(overlay);
@@ -1399,13 +1502,19 @@
 
       function showResultModal(created) {
         const list = document.getElementById("resultList");
-        const count = document.getElementById("resultCount");
-        count.textContent = created.length + " links vừa tạo";
+        document.getElementById("resultCount").textContent =
+          created.length + " links vừa tạo";
         list.innerHTML = created
           .map((l) => {
             const url = BASE + "/m/" + l.slug;
+            const mType = l.mailType || "gmx";
+            const badge =
+              mType === "tonline"
+                ? '<span style="color:var(--blue);font-size:9px;border:1px solid #b5c8e8;border-radius:8px;padding:1px 6px;flex-shrink:0">T</span>'
+                : '<span style="color:var(--green);font-size:9px;border:1px solid #b5d9bc;border-radius:8px;padding:1px 6px;flex-shrink:0">G</span>';
             return (
               '<div class="result-item">' +
+              badge +
               '<span class="result-from" title="' +
               esc(l.from) +
               '">' +
@@ -1443,20 +1552,13 @@
         wrap.style.display = "block";
         list.innerHTML = prev
           .map(
-            (h, i) => `
-    <div class="history-item">
-      <span class="history-meta"><b>${h.count} acc</b> — ${h.ts.replace("_", " ")}</span>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn-redl" onclick="reDownload(${i + 1})">⬇ Tải</button>
-        <button class="btn-redl" style="border-color:var(--danger);color:var(--danger)" onclick="deleteHistory(${i + 1})">✕</button>
-      </div>
-    </div>`,
+            (h, i) =>
+              `<div class="history-item"><span class="history-meta"><b>${h.count} acc</b> — ${h.ts.replace("_", " ")}</span><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn-redl" onclick="reDownload(${i + 1})">⬇ Tải</button><button class="btn-redl" style="border-color:var(--danger);color:var(--danger)" onclick="deleteHistory(${i + 1})">✕</button></div></div>`,
           )
           .join("");
       }
 
       function openHistory() {
-        // Mở modal chỉ với phần lịch sử, không có result list
         document.getElementById("resultList").innerHTML =
           '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">— Mở từ lịch sử —</div>';
         document.getElementById("resultCount").textContent = "";
@@ -1474,14 +1576,8 @@
         wrap.style.display = "block";
         list.innerHTML = createHistory
           .map(
-            (h, i) => `
-    <div class="history-item">
-      <span class="history-meta"><b>${h.count} acc</b> — ${h.ts.replace("_", " ")}</span>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn-redl" onclick="reDownload(${i})">⬇ Tải</button>
-        <button class="btn-redl" style="border-color:var(--danger);color:var(--danger)" onclick="deleteHistory(${i})">✕</button>
-      </div>
-    </div>`,
+            (h, i) =>
+              `<div class="history-item"><span class="history-meta"><b>${h.count} acc</b> — ${h.ts.replace("_", " ")}</span><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn-redl" onclick="reDownload(${i})">⬇ Tải</button><button class="btn-redl" style="border-color:var(--danger);color:var(--danger)" onclick="deleteHistory(${i})">✕</button></div></div>`,
           )
           .join("");
       }
@@ -1493,23 +1589,17 @@
         } catch {}
         updateHistoryBtn();
       }
-
       function updateHistoryBtn() {
         const btn = document.getElementById("historyBtn");
         if (createHistory.length > 0) {
           btn.style.display = "inline-flex";
           btn.textContent = "📁 Lịch sử (" + createHistory.length + ")";
-        } else {
-          btn.style.display = "none";
-        }
+        } else btn.style.display = "none";
       }
-
       function reDownload(idx) {
         const h = createHistory[idx];
         if (!h) return;
-        const lines = h.data.map(
-          (l) => l.from + "|" + l.to + "|" + BASE + "/m/" + l.slug,
-        );
+        const lines = h.data.map((l) => l.from + "|" + BASE + "/m/" + l.slug);
         const blob = new Blob([lines.join("\n")], {
           type: "text/plain;charset=utf-8",
         });
@@ -1521,7 +1611,6 @@
         URL.revokeObjectURL(url);
         toast("Đã tải lại " + h.count + " links!", "ok");
       }
-
       async function deleteHistory(idx) {
         if (!confirm("Xóa mục này?")) return;
         const r = await fetch("/api/admin/history/" + idx, {
@@ -1532,17 +1621,14 @@
         if (d.ok) {
           await loadHistoryFromServer();
           if (document.getElementById("resultModal").style.display === "flex") {
-            if (document.getElementById("resultCount").textContent === "") {
+            if (document.getElementById("resultCount").textContent === "")
               renderHistoryFull();
-            } else {
-              renderHistory();
-            }
+            else renderHistory();
             if (!createHistory.length) closeModal();
           }
           toast("Đã xóa", "ok");
         }
       }
-
       async function clearHistory() {
         if (!confirm("Xóa toàn bộ lịch sử?")) return;
         await fetch("/api/admin/history", { method: "DELETE", headers: H() });
@@ -1551,14 +1637,12 @@
         closeModal();
         toast("Đã xóa lịch sử", "ok");
       }
-
       function closeModal() {
         document.getElementById("resultModal").style.display = "none";
       }
-
       function downloadResult() {
         const lines = lastCreated.map(
-          (l) => l.from + "|" + l.to + "|" + BASE + "/m/" + l.slug,
+          (l) => l.from + "|" + BASE + "/m/" + l.slug,
         );
         const blob = new Blob([lines.join("\n")], {
           type: "text/plain;charset=utf-8",
@@ -1566,25 +1650,25 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        const now = new Date();
+        const now = new Date(),
+          pad = (n) => String(n).padStart(2, "0");
         const ts =
           now.getFullYear() +
           "-" +
-          String(now.getMonth() + 1).padStart(2, "0") +
+          pad(now.getMonth() + 1) +
           "-" +
-          String(now.getDate()).padStart(2, "0") +
+          pad(now.getDate()) +
           "_" +
-          String(now.getHours()).padStart(2, "0") +
+          pad(now.getHours()) +
           "-" +
-          String(now.getMinutes()).padStart(2, "0") +
+          pad(now.getMinutes()) +
           "-" +
-          String(now.getSeconds()).padStart(2, "0");
+          pad(now.getSeconds());
         a.download = "links-" + ts + "_" + lastCreated.length + "acc.txt";
         a.click();
         URL.revokeObjectURL(url);
         toast("Đã tải " + lastCreated.length + " links!", "ok");
       }
-
       async function deleteLink(slug) {
         if (!confirm("Xóa link này?")) return;
         const r = await fetch("/api/admin/links/" + slug, {
@@ -1597,7 +1681,6 @@
           loadLinks();
         }
       }
-
       function copyLink(url, btn) {
         navigator.clipboard.writeText(url).then(() => {
           btn.textContent = "✓";
@@ -1608,7 +1691,6 @@
           }, 2000);
         });
       }
-
       function doBackup() {
         requirePass("Xác nhận để tải file backup", () => {
           fetch("/api/admin/backup", { headers: H() })
@@ -1628,7 +1710,6 @@
             .catch(() => toast("Lỗi backup", "err"));
         });
       }
-
       function doRestore(input) {
         const file = input.files[0];
         if (!file) return;
@@ -1666,8 +1747,12 @@
         });
       }
 
-      function revealPass(el, pass) {
-        navigator.clipboard.writeText(pass).catch(() => {});
+      // ── Toggle xem pass / 2FA ─────────────────────────────────────────
+      function toggleSecret(el, secret, promptDesc) {
+        requirePass(promptDesc, () => revealSecret(el, secret));
+      }
+      function revealSecret(el, secret) {
+        navigator.clipboard.writeText(secret).catch(() => {});
         document
           .querySelectorAll('.pass-mask[data-shown="1"]')
           .forEach((other) => {
@@ -1680,14 +1765,14 @@
             if (other._hideTimer) clearTimeout(other._hideTimer);
           });
         if (el.dataset.shown === "1") {
-          el.textContent = "•".repeat(Math.min(pass.length, 12));
+          el.textContent = "•".repeat(Math.min(secret.length, 12));
           el.style.letterSpacing = "2px";
           el.style.color = "var(--muted)";
           el.dataset.shown = "0";
           if (el._hideTimer) clearTimeout(el._hideTimer);
         } else {
-          el.dataset.orig = pass;
-          el.textContent = pass;
+          el.dataset.orig = secret;
+          el.textContent = secret;
           el.style.letterSpacing = "normal";
           el.style.color = "var(--text)";
           el.dataset.shown = "1";
@@ -1695,7 +1780,7 @@
           if (el._hideTimer) clearTimeout(el._hideTimer);
           el._hideTimer = setTimeout(() => {
             if (el.dataset.shown === "1") {
-              el.textContent = "•".repeat(Math.min(pass.length, 12));
+              el.textContent = "•".repeat(Math.min(secret.length, 12));
               el.style.letterSpacing = "2px";
               el.style.color = "var(--muted)";
               el.dataset.shown = "0";
@@ -1704,19 +1789,12 @@
         }
       }
 
-      function togglePass(el, pass) {
-        requirePass("🔑 Nhập mật khẩu để xem pass", () => revealPass(el, pass));
-      }
-
       function quickCopy(text, el) {
         navigator.clipboard
           .writeText(text)
-          .then(() => {
-            showCopied(el);
-          })
+          .then(() => showCopied(el))
           .catch(() => {});
       }
-
       function showCopied(el) {
         const orig = el.style.outline || "";
         el.style.outline = "1.5px solid var(--green)";
@@ -1726,24 +1804,16 @@
         }, 1000);
       }
 
-      let _passModalCallback = null;
-      let _backupPassVerified = false;
-      let _backupPassExpiry = 0;
-
+      let _passModalCallback = null,
+        _backupPassVerified = false,
+        _backupPassExpiry = 0;
       function isBackupPassValid() {
         return _backupPassVerified && Date.now() < _backupPassExpiry;
       }
-
       function markBackupPassVerified() {
         _backupPassVerified = true;
-        _backupPassExpiry = Date.now() + 2 * 60 * 60 * 1000; // 2 tiếng
+        _backupPassExpiry = Date.now() + 2 * 60 * 60 * 1000;
       }
-
-      function resetBackupPass() {
-        _backupPassVerified = false;
-        _backupPassExpiry = 0;
-      }
-
       function requirePass(desc, callback) {
         if (isBackupPassValid()) {
           callback();
@@ -1756,7 +1826,6 @@
         document.getElementById("passModal").style.display = "flex";
         setTimeout(() => document.getElementById("passModalInput").focus(), 50);
       }
-
       async function confirmPassModal() {
         const val = document.getElementById("passModalInput").value;
         const r = await fetch("/api/admin/verify-backup-pass", {
@@ -1775,25 +1844,21 @@
         closePassModal();
         if (_passModalCallback) _passModalCallback();
       }
-
       function closePassModal() {
         document.getElementById("passModal").style.display = "none";
         _passModalCallback = null;
       }
-
       document.addEventListener("keydown", (e) => {
         if (
           e.key === "Enter" &&
           document.getElementById("passModal").style.display === "flex"
-        ) {
+        )
           confirmPassModal();
-        }
         if (
           e.key === "Escape" &&
           document.getElementById("passModal").style.display === "flex"
-        ) {
+        )
           closePassModal();
-        }
       });
 
       function esc(s) {
