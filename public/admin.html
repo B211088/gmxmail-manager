@@ -1594,10 +1594,24 @@
           btn.textContent = "📁 Lịch sử (" + createHistory.length + ")";
         } else btn.style.display = "none";
       }
-      function reDownload(idx) {
+      async function reDownload(idx) {
         const h = createHistory[idx];
         if (!h) return;
-        const lines = h.data.map((l) => l.from + "|" + BASE + "/m/" + l.slug);
+
+        // Nếu history cũ không có pass, lấy từ DB qua API
+        const needFetch = h.data.some((l) => !l.pass);
+        let dbMap = {};
+        if (needFetch) {
+          const r = await fetch("/api/admin/links", { headers: H() });
+          const all = await r.json();
+          all.forEach((l) => (dbMap[l.slug] = l));
+        }
+
+        const lines = h.data.map((l) => {
+          const pass = l.pass || (dbMap[l.slug] && dbMap[l.slug].pass) || "";
+          return l.from + "|" + pass + "|" + BASE + "/m/" + l.slug;
+        });
+
         const blob = new Blob([lines.join("\n")], {
           type: "text/plain;charset=utf-8",
         });
@@ -1640,7 +1654,7 @@
       }
       function downloadResult() {
         const lines = lastCreated.map(
-          (l) => l.from + "|" + BASE + "/m/" + l.slug,
+          (l) => l.from + "|" + l.pass + "|" + BASE + "/m/" + l.slug,
         );
         const blob = new Blob([lines.join("\n")], {
           type: "text/plain;charset=utf-8",

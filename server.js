@@ -186,7 +186,7 @@ app.post("/api/admin/links", requireAdmin, (req, res) => {
       label: (lbl || label || "").trim(),
       createdAt: new Date(baseTime + entryIdx).toISOString(),
     };
-    created.push({ slug, from, to, mailType, label: db[slug].label });
+    created.push({ slug, from, to, pass, mailType, label: db[slug].label });
   }
 
   saveDB(db);
