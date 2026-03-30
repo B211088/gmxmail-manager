@@ -509,7 +509,6 @@ app.get("/api/info/:slug", (req, res) => {
   if (!entry) return res.status(404).json({ error: "Không tìm thấy" });
   res.json({
     from: entry.from,
-    to: entry.to,
     label: entry.label,
     mailType: entry.mailType || "gmx",
   });
